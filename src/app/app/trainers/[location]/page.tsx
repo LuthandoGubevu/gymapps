@@ -37,7 +37,8 @@ const SpecialtyBadge = ({ name }: { name: Specialty }) => (
   </Badge>
 );
 
-export default function LocationTrainersPage({ params: { location: locationId } }: { params: { location: string } }) {
+export default function LocationTrainersPage({ params }: { params: { location: string } }) {
+  const locationId = params.location;
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();

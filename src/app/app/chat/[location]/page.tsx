@@ -30,7 +30,8 @@ const formatTimestamp = (timestamp: Timestamp | null) => {
   return new Date(timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-export default function ChatPage({ params: { location: locationId } }: { params: { location: string } }) {
+export default function ChatPage({ params }: { params: { location: string } }) {
+  const locationId = params.location;
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();

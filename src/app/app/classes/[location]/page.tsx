@@ -37,7 +37,8 @@ const ClassBadge = ({ name }: { name: ClassName }) => {
   );
 };
 
-export default function LocationClassesPage({ params: { location: locationId } }: { params: { location: string } }) {
+export default function LocationClassesPage({ params }: { params: { location: string } }) {
+  const locationId = params.location;
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();

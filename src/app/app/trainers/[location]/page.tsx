@@ -37,11 +37,10 @@ const SpecialtyBadge = ({ name }: { name: Specialty }) => (
   </Badge>
 );
 
-export default function LocationTrainersPage({ params }: { params: { location: string } }) {
+export default function LocationTrainersPage({ params: { location: locationId } }: { params: { location: string } }) {
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
-  const locationId = params.location;
   
   const location = useMemo(() => trainerLocations.find(l => l.id === locationId), [locationId]);
 

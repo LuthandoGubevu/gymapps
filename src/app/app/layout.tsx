@@ -3,6 +3,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/sidebar-nav";
+import { BottomNav } from "@/components/bottom-nav";
 
 export default function AppLayout({
     children,
@@ -38,9 +39,10 @@ export default function AppLayout({
                     <SidebarTrigger className="md:hidden" />
                     <h1 className="text-xl font-semibold md:hidden">MetroGym</h1>
                 </header>
-                <main className="flex-1 p-4 md:p-6 lg:p-8">
+                <main className="flex-1 p-4 pb-20 md:p-6 md:pb-6 lg:p-8 lg:pb-8">
                     {children}
                 </main>
+                <BottomNav />
             </SidebarInset>
         </SidebarProvider>
     );

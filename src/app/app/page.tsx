@@ -18,17 +18,17 @@ export default function DashboardPage() {
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <GymCapacityCard />
-        <Card className="shadow-md border-l-4 border-primary">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Your Next Workout</CardTitle>
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Full Body Strength</div>
-            <p className="text-xs text-muted-foreground">Scheduled for today at 5:00 PM</p>
+            <p className="text-xs text-muted-foreground">Today at 5:00 PM</p>
           </CardContent>
         </Card>
-        <Card className="shadow-md">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Weekly Goal</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
@@ -38,7 +38,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">Keep up the great work!</p>
           </CardContent>
         </Card>
-        <Card className="shadow-md">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Activity Streak</CardTitle>
             <HeartPulse className="h-4 w-4 text-muted-foreground" />
@@ -50,7 +50,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="shadow-lg">
+      <Card>
         <CardHeader>
             <CardTitle>Class Schedule</CardTitle>
             <CardDescription>Check out this week's featured classes.</CardDescription>

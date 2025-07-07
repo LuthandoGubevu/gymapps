@@ -36,16 +36,36 @@ export function SidebarNav() {
     }
   };
 
+  const hasPrimaryGym = !!user?.primaryGym;
+
   const menuItems = [
-    { href: "/app", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/app/profile", label: "Profile", icon: User },
-    { href: "/app/classes", label: "Classes", icon: CalendarDays },
-    { href: "/app/trainers", label: "Trainers", icon: Users },
-    { href: "/app/chat", label: "Gym Chat", icon: MessageSquare },
+    { href: "/app", label: "Dashboard", icon: LayoutDashboard, disabled: false },
+    { href: "/app/profile", label: "Profile", icon: User, disabled: false },
+    { 
+      href: hasPrimaryGym ? `/app/classes/${user.primaryGym}` : "/app/classes", 
+      label: "Classes", 
+      icon: CalendarDays,
+      disabled: !hasPrimaryGym,
+      tooltip: !hasPrimaryGym ? "Set your primary gym in Profile" : "View Classes"
+    },
+    { 
+      href: hasPrimaryGym ? `/app/trainers/${user.primaryGym}` : "/app/trainers", 
+      label: "Trainers", 
+      icon: Users,
+      disabled: !hasPrimaryGym,
+      tooltip: !hasPrimaryGym ? "Set your primary gym in Profile" : "View Trainers"
+    },
+    { 
+      href: hasPrimaryGym ? `/app/chat/${user.primaryGym}` : "/app/chat", 
+      label: "Gym Chat", 
+      icon: MessageSquare,
+      disabled: !hasPrimaryGym,
+      tooltip: !hasPrimaryGym ? "Set your primary gym in Profile" : "Join Gym Chat"
+    },
   ];
 
   if (user?.role === 'admin') {
-    menuItems.push({ href: "/app/admin", label: "Admin Panel", icon: Shield });
+    menuItems.push({ href: "/app/admin", label: "Admin Panel", icon: Shield, disabled: false });
   }
 
   return (
@@ -59,11 +79,13 @@ export function SidebarNav() {
       <SidebarContent>
         <SidebarMenu>
           {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
+            <SidebarMenuItem key={item.label}>
               <SidebarMenuButton
-                isActive={pathname.startsWith(item.href)}
-                onClick={() => router.push(item.href)}
-                tooltip={item.label}
+                isActive={!item.disabled && pathname.startsWith(item.href)}
+                onClick={() => !item.disabled && router.push(item.href)}
+                tooltip={item.tooltip || item.label}
+                disabled={item.disabled}
+                aria-disabled={item.disabled}
               >
                   <item.icon />
                   <span>{item.label}</span>

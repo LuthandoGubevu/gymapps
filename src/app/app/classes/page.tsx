@@ -1,88 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { locations } from "@/lib/class-schedule";
-import { MapPin, Calendar, ArrowRight } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { Day } from "@/lib/class-schedule";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const dayMapping: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-
-const getToday = (): Day => {
-    const dayIndex = new Date().getDay(); // Sunday - 0, Monday - 1...
-    // Adjust to make Monday = 0, Tuesday = 1, ..., Sunday = 6
-    const adjustedIndex = (dayIndex + 6) % 7;
-    // Default to Monday for weekends as there are no weekend classes
-    return dayMapping[adjustedIndex] || 'Monday';
-};
-
-
-export default function ClassesPage() {
-    const [today, setToday] = useState<Day | null>(null);
+export default function ClassesRedirectPage() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
-        setToday(getToday());
-    }, []);
+        if (!loading && user?.primaryGym) {
+            router.push(`/app/classes/${user.primaryGym}`);
+        }
+    }, [user, loading, router]);
 
-
-    if (!today) {
+    if (loading) {
+         return (
+             <div className="flex h-full w-full items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className="text-muted-foreground">Redirecting to your gym's class schedule...</p>
+                </div>
+             </div>
+        );
+    }
+    
+    if (!user?.primaryGym) {
         return (
             <div className="space-y-8">
                 <div>
                     <h1 className="text-3xl font-bold">Book a Class</h1>
-                    <p className="text-muted-foreground">Loading available locations...</p>
+                    <p className="text-muted-foreground">Please complete your profile to book a class.</p>
                 </div>
-                <div className="grid gap-6 md:grid-cols-2">
-                    {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-64 w-full" />)}
-                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Primary Gym Not Set</CardTitle>
+                        <CardDescription>
+                           You need to set your primary gym location in your profile before you can view class schedules.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">Please visit your profile page to update your information.</p>
+                    </CardContent>
+                </Card>
             </div>
         )
     }
 
-    return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold">Book a Class</h1>
-                <p className="text-muted-foreground">Select a location to see the class schedule.</p>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2">
-                {locations.map((location) => {
-                    const classesToday = location.schedule.filter(c => c.day === today).length;
-                    return (
-                        <Card key={location.id} className="shadow-lg hover:shadow-primary/20 transition-shadow duration-300 flex flex-col">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <MapPin className="text-primary" />
-                                    {location.name}
-                                </CardTitle>
-                                <CardDescription>{location.address}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-grow">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Calendar className="size-4" />
-                                    <span>
-                                        {classesToday > 0 
-                                            ? `${classesToday} class${classesToday > 1 ? 'es' : ''} available today`
-                                            : "No classes scheduled today"
-                                        }
-                                    </span>
-                                </div>
-                            </CardContent>
-                            <CardFooter>
-                                <Link href={`/app/classes/${location.id}`} className="w-full">
-                                    <Button className="w-full font-bold">
-                                        View Schedule
-                                        <ArrowRight className="ml-2 size-4" />
-                                    </Button>
-                                </Link>
-                            </CardFooter>
-                        </Card>
-                    );
-                })}
-            </div>
-        </div>
-    );
+    return null;
 }

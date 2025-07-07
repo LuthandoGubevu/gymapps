@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import { useParams, notFound } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useMemo, useEffect } from 'react';
+import { useParams, notFound, useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/hooks/use-auth';
 import { locations, ClassInfo, ClassName } from '@/lib/class-schedule';
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, Calendar as CalendarIcon, Dumbbell } from 'lucide-react';
+import { Clock, Calendar as CalendarIcon, Dumbbell } from 'lucide-react';
 
 const classColorMap: Record<ClassName, string> = {
   'HIIT': 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30',
@@ -37,13 +37,27 @@ const ClassBadge = ({ name }: { name: ClassName }) => {
 
 export default function LocationClassesPage() {
   const params = useParams();
+  const router = useRouter();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const locationId = params.location as string;
   
   const location = useMemo(() => locations.find(l => l.id === locationId), [locationId]);
 
   const [selectedDay, setSelectedDay] = useState<string>('all');
   const [selectedTime, setSelectedTime] = useState<string>('all');
+
+  useEffect(() => {
+    // Redirect user if they try to access a page for a different gym
+    if (!authLoading && user && user.primaryGym !== locationId) {
+        toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You can only view classes for your primary gym.",
+        });
+        router.push(`/app/classes/${user.primaryGym}`);
+    }
+  }, [user, authLoading, locationId, router, toast]);
   
   const availableDays = useMemo(() => {
     if (!location) return [];
@@ -71,6 +85,10 @@ export default function LocationClassesPage() {
     });
   };
 
+  if (authLoading || (!user && !location)) {
+      return <div>Loading...</div> // Or a proper skeleton loader
+  }
+
   if (!location) {
     notFound();
   }
@@ -78,10 +96,6 @@ export default function LocationClassesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <Link href="/app/classes" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
-          <ArrowLeft className="size-4" />
-          Back to Locations
-        </Link>
         <h1 className="text-3xl font-bold">Class Schedule: {location.name}</h1>
         <p className="text-muted-foreground">Book your spot in one of our classes.</p>
       </div>

@@ -1,53 +1,55 @@
 "use client";
 
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { trainerLocations } from "@/lib/trainer-schedule";
-import { MapPin, Users, ArrowRight } from "lucide-react";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function TrainersPage() {
-    return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold">Book a Personal Trainer</h1>
-                <p className="text-muted-foreground">Select a location to see available trainers.</p>
+export default function TrainersRedirectPage() {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading && user?.primaryGym) {
+            router.push(`/app/trainers/${user.primaryGym}`);
+        }
+    }, [user, loading, router]);
+
+    if (loading) {
+         return (
+             <div className="flex h-full w-full items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className="text-muted-foreground">Redirecting to your gym's trainer list...</p>
+                </div>
+             </div>
+        );
+    }
+    
+    if (!user?.primaryGym) {
+        return (
+            <div className="space-y-8">
+                <div>
+                    <h1 className="text-3xl font-bold">Book a Personal Trainer</h1>
+                    <p className="text-muted-foreground">Please complete your profile to book a trainer.</p>
+                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Primary Gym Not Set</CardTitle>
+                        <CardDescription>
+                           You need to set your primary gym location in your profile before you can view available trainers.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">Please visit your profile page to update your information.</p>
+                    </CardContent>
+                </Card>
             </div>
-            <div className="grid gap-6 md:grid-cols-2">
-                {trainerLocations.map((location) => {
-                    const trainersAvailable = location.trainers.length;
-                    return (
-                        <Card key={location.id} className="shadow-lg hover:shadow-primary/20 transition-shadow duration-300 flex flex-col">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <MapPin className="text-primary" />
-                                    {location.name}
-                                </CardTitle>
-                                <CardDescription>{location.address}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex-grow">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Users className="size-4" />
-                                    <span>
-                                        {trainersAvailable > 0
-                                            ? `${trainersAvailable} trainer${trainersAvailable > 1 ? 's' : ''} available`
-                                            : "No trainers available"
-                                        }
-                                    </span>
-                                </div>
-                            </CardContent>
-                            <CardFooter>
-                                <Link href={`/app/trainers/${location.id}`} className="w-full">
-                                    <Button className="w-full font-bold">
-                                        View Trainers
-                                        <ArrowRight className="ml-2 size-4" />
-                                    </Button>
-                                </Link>
-                            </CardFooter>
-                        </Card>
-                    );
-                })}
-            </div>
-        </div>
-    );
+        )
+    }
+
+    return null;
 }

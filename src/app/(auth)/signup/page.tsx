@@ -7,13 +7,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { locations } from "@/lib/class-schedule";
 
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,11 +24,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
-  fullName: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  firstName: z.string().min(2, { message: "First name must be at least 2 characters." }),
+  lastName: z.string().min(2, { message: "Last name must be at least 2 characters." }),
+  username: z.string().min(3, { message: "Username must be at least 3 characters." }),
   email: z.string().email({ message: "Please enter a valid email." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  confirmPassword: z.string(),
+  primaryGym: z.string({ required_error: "Please select a primary gym." }),
+  terms: z.boolean().default(false).refine(val => val === true, {
+    message: "You must accept the terms and conditions.",
+  }),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match.",
+  path: ["confirmPassword"],
 });
 
 export default function SignupPage() {
@@ -37,9 +51,13 @@ export default function SignupPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
+      firstName: "",
+      lastName: "",
+      username: "",
       email: "",
       password: "",
+      confirmPassword: "",
+      terms: false,
     },
   });
 
@@ -49,16 +67,25 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
+      const displayName = `${values.firstName} ${values.lastName}`;
       await updateProfile(user, {
-        displayName: values.fullName,
+        displayName: displayName,
       });
 
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        username: values.username,
         email: values.email,
-        fullName: values.fullName,
-        role: "user", // Default role
-        createdAt: new Date(),
+        primaryGym: values.primaryGym,
+        role: "user",
+        createdAt: serverTimestamp(),
+      });
+      
+      toast({
+        title: "✅ Account created!",
+        description: "Redirecting to your dashboard...",
       });
 
       router.push("/app");
@@ -66,7 +93,9 @@ export default function SignupPage() {
       toast({
         variant: "destructive",
         title: "Sign Up Failed",
-        description: error.message,
+        description: error.code === 'auth/email-already-in-use' 
+            ? "This email is already associated with an account."
+            : error.message,
       });
     } finally {
       setIsLoading(false);
@@ -81,15 +110,43 @@ export default function SignupPage() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Luthando" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                 <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Gubevu" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+             <FormField
               control={form.control}
-              name="fullName"
+              name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="lou" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -121,6 +178,66 @@ export default function SignupPage() {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••••" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="primaryGym"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Primary Gym</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your home gym location" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {locations.map(location => (
+                        <SelectItem key={location.id} value={location.id}>
+                          MetroGym {location.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+                control={form.control}
+                name="terms"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                    <FormControl>
+                        <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                        <FormLabel>
+                        Accept terms and conditions
+                        </FormLabel>
+                        <FormDescription>
+                        You agree to our Terms of Service and Privacy Policy.
+                        </FormDescription>
+                        <FormMessage />
+                    </div>
+                    </FormItem>
+                )}
+             />
             <Button type="submit" className="w-full font-bold" size="lg" disabled={isLoading}>
               {isLoading ? "Creating Account..." : "Sign Up"}
             </Button>

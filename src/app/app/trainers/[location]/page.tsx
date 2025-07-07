@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import { useParams, notFound } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useMemo, useEffect } from 'react';
+import { useParams, notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/hooks/use-auth';
 import { 
   trainerLocations, 
   getAvailableDaysForLocation, 
@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, Calendar as CalendarIcon, UserCheck } from 'lucide-react';
+import { Clock, Calendar as CalendarIcon, UserCheck } from 'lucide-react';
 
 const specialtyColorMap: Record<Specialty, string> = {
   'Strength': 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30',
@@ -37,7 +37,9 @@ const SpecialtyBadge = ({ name }: { name: Specialty }) => (
 
 export default function LocationTrainersPage() {
   const params = useParams();
+  const router = useRouter();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const locationId = params.location as string;
   
   const location = useMemo(() => trainerLocations.find(l => l.id === locationId), [locationId]);
@@ -45,6 +47,18 @@ export default function LocationTrainersPage() {
   const [selectedDay, setSelectedDay] = useState<string>('all');
   const [selectedTime, setSelectedTime] = useState<string>('all');
   
+  useEffect(() => {
+    // Redirect user if they try to access a page for a different gym
+    if (!authLoading && user && user.primaryGym !== locationId) {
+        toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You can only view trainers for your primary gym.",
+        });
+        router.push(`/app/trainers/${user.primaryGym}`);
+    }
+  }, [user, authLoading, locationId, router, toast]);
+
   const availableDays = useMemo(() => {
     if (!location) return [];
     return getAvailableDaysForLocation(location.id);
@@ -73,6 +87,10 @@ export default function LocationTrainersPage() {
     });
   };
 
+  if (authLoading || (!user && !location)) {
+      return <div>Loading...</div> // Or a proper skeleton loader
+  }
+
   if (!location) {
     notFound();
   }
@@ -80,10 +98,6 @@ export default function LocationTrainersPage() {
   return (
     <div className="space-y-8">
       <div>
-        <Link href="/app/trainers" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4">
-          <ArrowLeft className="size-4" />
-          Back to Locations
-        </Link>
         <h1 className="text-3xl font-bold">Trainers at {location.name}</h1>
         <p className="text-muted-foreground">Book a session with one of our expert trainers.</p>
       </div>

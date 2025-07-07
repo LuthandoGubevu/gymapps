@@ -9,7 +9,10 @@ import { useRouter, usePathname } from 'next/navigation';
 interface UserProfile extends User {
   role?: 'user' | 'admin';
   fitnessGoals?: string;
-  fullName?: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  primaryGym?: string;
 }
 
 interface AuthContextType {
@@ -34,6 +37,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const userData = userDoc.data();
           setUser({ ...firebaseUser, ...userData });
         } else {
+          // This case handles users who signed up before the new fields were added
+          // or if the doc creation failed.
           setUser(firebaseUser);
         }
       } else {

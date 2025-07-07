@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
@@ -11,9 +10,9 @@ import { locations } from '@/lib/class-schedule';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Send } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Send } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Message {
@@ -32,7 +31,7 @@ const formatTimestamp = (timestamp: Timestamp | null) => {
 };
 
 export default function ChatPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -46,6 +45,17 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Redirect user if they try to access a chat for a different gym
+    if (!authLoading && user && user.primaryGym !== locationId) {
+        toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You can only access the chat for your primary gym.",
+        });
+        router.push(`/app/chat/${user.primaryGym}`);
+        return;
+    }
+
     if (!location) return;
 
     const messagesColRef = collection(db, 'chats', location.id, 'messages');
@@ -69,7 +79,7 @@ export default function ChatPage() {
     });
 
     return () => unsubscribe();
-  }, [location, toast]);
+  }, [location, toast, authLoading, user, locationId, router]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,17 +112,17 @@ export default function ChatPage() {
     }
   };
 
+  if (authLoading || (!user && !location)) {
+      return <div>Loading...</div> // Or a proper skeleton loader
+  }
+
   if (!location) {
     notFound();
   }
   
   return (
-    <div className="flex h-[calc(100vh-theme(spacing.32))] flex-col">
+    <div className="flex h-[calc(100vh-theme(spacing.24))] flex-col">
        <div className="mb-4">
-        <Link href="/app/chat" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" />
-          Back to Locations
-        </Link>
         <h1 className="text-3xl font-bold mt-2">MetroGym {location.name} Group Chat</h1>
       </div>
 

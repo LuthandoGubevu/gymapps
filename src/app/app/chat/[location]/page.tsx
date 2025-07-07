@@ -96,7 +96,7 @@ export default function ChatPage() {
         text: newMessage,
         sender: {
           id: user.uid,
-          name: user.displayName || 'Anonymous',
+          name: user.username || user.displayName || 'Anonymous',
         },
         timestamp: serverTimestamp(),
       });

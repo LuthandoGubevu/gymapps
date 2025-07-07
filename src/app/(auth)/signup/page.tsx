@@ -72,6 +72,8 @@ export default function SignupPage() {
         displayName: displayName,
       });
 
+      const isAdmin = values.email.toLowerCase() === 'tidoteez@gmail.com';
+
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         firstName: values.firstName,
@@ -79,7 +81,7 @@ export default function SignupPage() {
         username: values.username,
         email: values.email,
         primaryGym: values.primaryGym,
-        role: "user",
+        role: isAdmin ? "admin" : "user",
         createdAt: serverTimestamp(),
       });
       

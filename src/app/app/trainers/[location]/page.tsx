@@ -18,6 +18,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Calendar as CalendarIcon, UserCheck } from 'lucide-react';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const specialtyColorMap: Record<Specialty, string> = {
   'Strength': 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30',
@@ -46,9 +48,9 @@ export default function LocationTrainersPage() {
 
   const [selectedDay, setSelectedDay] = useState<string>('all');
   const [selectedTime, setSelectedTime] = useState<string>('all');
+  const [isBooking, setIsBooking] = useState<string | null>(null);
   
   useEffect(() => {
-    // Redirect user if they try to access a page for a different gym
     if (!authLoading && user && user.primaryGym !== locationId) {
         toast({
             variant: "destructive",
@@ -80,15 +82,48 @@ export default function LocationTrainersPage() {
     });
   }, [location, selectedDay, selectedTime]);
 
-  const handleBooking = (trainer: Trainer) => {
-    toast({
-      title: "✅ Trainer Booked!",
-      description: `Successfully booked ${trainer.name} for ${selectedTime} on ${selectedDay}.`,
-    });
+  const handleBooking = async (trainer: Trainer) => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Not Authenticated", description: "You need to be logged in to book a trainer." });
+      return;
+    }
+    if (selectedDay === 'all' || selectedTime === 'all') {
+      toast({ variant: "destructive", title: "Selection Missing", description: "Please select a day and time to book." });
+      return;
+    }
+    setIsBooking(trainer.id);
+    try {
+      await addDoc(collection(db, "trainerBookings"), {
+        userId: user.uid,
+        userName: user.displayName || "Unknown User",
+        userEmail: user.email,
+        gymId: locationId,
+        gymName: location?.name,
+        trainerId: trainer.id,
+        trainerName: trainer.name,
+        day: selectedDay,
+        time: selectedTime,
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+      toast({
+        title: "✅ Booking Requested",
+        description: `Your request for ${trainer.name} on ${selectedDay} at ${selectedTime} has been sent.`,
+      });
+    } catch (error) {
+      console.error("Error booking trainer:", error);
+      toast({
+        variant: "destructive",
+        title: "Booking Failed",
+        description: "There was a problem requesting your booking. Please try again.",
+      });
+    } finally {
+      setIsBooking(null);
+    }
   };
 
   if (authLoading || (!user && !location)) {
-      return <div>Loading...</div> // Or a proper skeleton loader
+      return <div>Loading...</div>
   }
 
   if (!location) {
@@ -158,9 +193,13 @@ export default function LocationTrainersPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                 <Button className="w-full font-bold" onClick={() => handleBooking(trainer)} disabled={selectedDay === 'all' || selectedTime === 'all'}>
+                 <Button 
+                   className="w-full font-bold" 
+                   onClick={() => handleBooking(trainer)} 
+                   disabled={selectedDay === 'all' || selectedTime === 'all' || isBooking === trainer.id}
+                  >
                     <UserCheck className="mr-2 size-4"/>
-                    Book Now
+                    {isBooking === trainer.id ? 'Requesting...' : 'Request Booking'}
                  </Button>
               </CardFooter>
             </Card>

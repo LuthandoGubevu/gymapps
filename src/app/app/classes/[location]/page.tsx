@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Calendar as CalendarIcon, Dumbbell } from 'lucide-react';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const classColorMap: Record<ClassName, string> = {
   'HIIT': 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30',
@@ -46,9 +48,9 @@ export default function LocationClassesPage() {
 
   const [selectedDay, setSelectedDay] = useState<string>('all');
   const [selectedTime, setSelectedTime] = useState<string>('all');
+  const [isBooking, setIsBooking] = useState<string | null>(null);
 
   useEffect(() => {
-    // Redirect user if they try to access a page for a different gym
     if (!authLoading && user && user.primaryGym !== locationId) {
         toast({
             variant: "destructive",
@@ -78,11 +80,40 @@ export default function LocationClassesPage() {
     );
   }, [location, selectedDay, selectedTime]);
 
-  const handleBooking = (cls: ClassInfo) => {
-    toast({
-      title: "✅ Class Booked!",
-      description: `Successfully booked ${cls.name} on ${cls.day} at ${cls.time}.`,
-    });
+  const handleBooking = async (cls: ClassInfo) => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Not Authenticated", description: "You need to be logged in to book a class." });
+      return;
+    }
+    setIsBooking(cls.id);
+    try {
+      await addDoc(collection(db, "classBookings"), {
+        userId: user.uid,
+        userName: user.displayName || "Unknown User",
+        userEmail: user.email,
+        gymId: locationId,
+        gymName: location?.name,
+        classId: cls.id,
+        className: cls.name,
+        classTime: cls.time,
+        classDay: cls.day,
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+      toast({
+        title: "✅ Booking Requested",
+        description: `Your request for ${cls.name} has been sent. You'll be notified upon confirmation.`,
+      });
+    } catch (error) {
+      console.error("Error booking class:", error);
+      toast({
+        variant: "destructive",
+        title: "Booking Failed",
+        description: "There was a problem requesting your booking. Please try again.",
+      });
+    } finally {
+      setIsBooking(null);
+    }
   };
 
   if (authLoading || (!user && !location)) {
@@ -152,16 +183,20 @@ export default function LocationClassesPage() {
             </TableHeader>
             <TableBody>
                 {filteredClasses.length > 0 ? (
-                filteredClasses.map((cls, index) => (
-                    <TableRow key={index} className="hover:bg-muted/50">
+                filteredClasses.map((cls) => (
+                    <TableRow key={cls.id} className="hover:bg-muted/50">
                     <TableCell className="font-medium">
                         <ClassBadge name={cls.name} />
                     </TableCell>
                     <TableCell>{cls.day}</TableCell>
                     <TableCell>{cls.time}</TableCell>
                     <TableCell className="text-right">
-                        <Button onClick={() => handleBooking(cls)} size="sm" disabled={!cls.name || cls.name === "Instructor Decides"}>
-                        Book Now
+                        <Button 
+                          onClick={() => handleBooking(cls)} 
+                          size="sm" 
+                          disabled={!cls.name || cls.name === "Instructor Decides" || isBooking === cls.id}
+                        >
+                          {isBooking === cls.id ? 'Requesting...' : 'Request Booking'}
                         </Button>
                     </TableCell>
                     </TableRow>

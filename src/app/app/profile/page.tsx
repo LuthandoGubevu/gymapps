@@ -126,7 +126,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8">
         <div>
-            <h1 className="text-3xl font-bold">Your Profile</h1>
+            <h1 className="text-2xl font-bold md:text-3xl">Your Profile</h1>
             <p className="text-muted-foreground">Manage your personal information and goals.</p>
         </div>
         <Card className="shadow-lg max-w-2xl">
@@ -137,7 +137,7 @@ export default function ProfilePage() {
         <CardContent>
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="firstName"

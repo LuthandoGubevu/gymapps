@@ -198,7 +198,7 @@ export default function AdminPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
+                <h1 className="text-2xl font-bold md:text-3xl flex items-center gap-2">
                     <ShieldCheck className="text-primary size-8" />
                     Admin Panel
                 </h1>

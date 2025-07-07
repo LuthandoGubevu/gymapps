@@ -133,7 +133,7 @@ export default function LocationTrainersPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Trainers at {location.name}</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">Trainers at {location.name}</h1>
         <p className="text-muted-foreground">Book a session with one of our expert trainers.</p>
       </div>
 

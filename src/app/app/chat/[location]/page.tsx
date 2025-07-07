@@ -123,7 +123,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-[calc(100vh-theme(spacing.24))] flex-col">
        <div className="mb-4">
-        <h1 className="text-3xl font-bold mt-2">MetroGym {location.name} Group Chat</h1>
+        <h1 className="text-2xl font-bold md:text-3xl mt-2">MetroGym {location.name} Group Chat</h1>
       </div>
 
       <Card className="flex flex-1 flex-col shadow-lg">

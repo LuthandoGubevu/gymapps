@@ -127,7 +127,7 @@ export default function LocationClassesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Class Schedule: {location.name}</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">Class Schedule: {location.name}</h1>
         <p className="text-muted-foreground">Book your spot in one of our classes.</p>
       </div>
 

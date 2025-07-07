@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, User, Shield, LogOut, Dumbbell, CalendarDays } from "lucide-react";
+import { LayoutDashboard, User, Shield, LogOut, Dumbbell, CalendarDays, Users } from "lucide-react";
 import {
   SidebarHeader,
   SidebarContent,
@@ -40,6 +40,7 @@ export function SidebarNav() {
     { href: "/app", label: "Dashboard", icon: LayoutDashboard },
     { href: "/app/profile", label: "Profile", icon: User },
     { href: "/app/classes", label: "Classes", icon: CalendarDays },
+    { href: "/app/trainers", label: "Trainers", icon: Users },
   ];
 
   if (user?.role === 'admin') {

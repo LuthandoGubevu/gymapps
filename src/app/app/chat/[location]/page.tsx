@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
-import { useParams, notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
@@ -30,12 +30,11 @@ const formatTimestamp = (timestamp: Timestamp | null) => {
   return new Date(timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-export default function ChatPage() {
+export default function ChatPage({ params }: { params: { location: string } }) {
   const { user, loading: authLoading } = useAuth();
-  const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const locationId = params.location as string;
+  const locationId = params.location;
   const location = locations.find(l => l.id === locationId);
   
   const [messages, setMessages] = useState<Message[]>([]);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/hooks/use-auth';
@@ -37,12 +37,11 @@ const SpecialtyBadge = ({ name }: { name: Specialty }) => (
   </Badge>
 );
 
-export default function LocationTrainersPage() {
-  const params = useParams();
+export default function LocationTrainersPage({ params }: { params: { location: string } }) {
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
-  const locationId = params.location as string;
+  const locationId = params.location;
   
   const location = useMemo(() => trainerLocations.find(l => l.id === locationId), [locationId]);
 
@@ -199,7 +198,7 @@ export default function LocationTrainersPage() {
                    disabled={selectedDay === 'all' || selectedTime === 'all' || isBooking === trainer.id}
                   >
                     <UserCheck className="mr-2 size-4"/>
-                    {isBooking === trainer.id ? 'Requesting...' : 'Request Booking'}
+                    {isBooking === trainer.id ? 'Requesting...' : 'Requesting...'}
                  </Button>
               </CardFooter>
             </Card>

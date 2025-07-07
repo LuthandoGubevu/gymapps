@@ -5,12 +5,12 @@ import { getFirestore } from "firebase/firestore";
 // Your web app's Firebase configuration
 // IMPORTANT: Replace with your own Firebase project configuration.
 const firebaseConfig = {
-  apiKey: "AIzaSyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "your-messaging-sender-id",
-  appId: "your-app-id",
+  apiKey: "AIzaSyA9aOc04uP77qVZ1E-HKLPZLJ_7b35z3zU",
+  authDomain: "gymapp-3f326.firebaseapp.com",
+  projectId: "gymapp-3f326",
+  storageBucket: "gymapp-3f326.appspot.com",
+  messagingSenderId: "830415062900",
+  appId: "1:830415062900:web:35de7893d4d6f1267f8e21",
 };
 
 // Initialize Firebase

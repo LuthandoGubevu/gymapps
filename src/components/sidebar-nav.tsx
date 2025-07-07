@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, User, Shield, LogOut, Dumbbell } from "lucide-react";
+import { LayoutDashboard, User, Shield, LogOut, Dumbbell, CalendarDays } from "lucide-react";
 import {
   SidebarHeader,
   SidebarContent,
@@ -39,6 +39,7 @@ export function SidebarNav() {
   const menuItems = [
     { href: "/app", label: "Dashboard", icon: LayoutDashboard },
     { href: "/app/profile", label: "Profile", icon: User },
+    { href: "/app/classes", label: "Classes", icon: CalendarDays },
   ];
 
   if (user?.role === 'admin') {
@@ -58,7 +59,7 @@ export function SidebarNav() {
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
-                isActive={pathname === item.href}
+                isActive={pathname.startsWith(item.href)}
                 onClick={() => router.push(item.href)}
                 tooltip={item.label}
               >

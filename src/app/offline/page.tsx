@@ -4,12 +4,12 @@ import { Logo } from '@/components/logo';
 
 export default function OfflinePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8 text-center">
         <div className="flex justify-center">
           <Logo />
         </div>
-        <Card className="shadow-lg">
+        <Card>
             <CardHeader>
                 <CardTitle className="flex items-center justify-center gap-2">
                     <WifiOff className="size-6 text-primary" />

@@ -14,7 +14,7 @@ export default function AppLayout({
 
     if (loading) {
         return (
-            <div className="flex h-screen w-full items-center justify-center bg-background">
+            <div className="flex h-screen w-full items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                   <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -35,7 +35,7 @@ export default function AppLayout({
                 <SidebarNav />
             </Sidebar>
             <SidebarInset>
-                <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm md:justify-end">
+                <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-white/20 bg-sidebar/80 px-4 backdrop-blur-sm md:justify-end">
                     <SidebarTrigger className="md:hidden" />
                     <h1 className="text-xl font-semibold md:hidden">MetroGym</h1>
                 </header>

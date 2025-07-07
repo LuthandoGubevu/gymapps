@@ -39,10 +39,10 @@
     --background: 222 47% 11%; /* #0F172A */
     --foreground: 210 20% 98%; /* #F9FAFB */
 
-    --card: 224 41% 14%; /* Slightly lighter than background */
+    --card: 224 41% 14% / 0.6; /* Semi-transparent card */
     --card-foreground: 210 20% 98%;
  
-    --popover: 222 47% 11%;
+    --popover: 224 41% 14% / 0.8; /* Semi-transparent popover */
     --popover-foreground: 210 20% 98%;
  
     --primary: 45 93% 52%; /* #FACC15 */
@@ -64,7 +64,7 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 45 85% 48%;
 
-    --sidebar-background: 224 41% 14%;
+    --sidebar-background: 224 41% 14% / 0.6; /* Semi-transparent sidebar */
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 45 93% 52%;
     --sidebar-primary-foreground: 222 47% 11%;

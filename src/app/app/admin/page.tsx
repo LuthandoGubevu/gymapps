@@ -6,7 +6,8 @@ import { useEffect, useState, useMemo } from "react";
 import { collection, query, onSnapshot, doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { locations, ClassInfo } from "@/lib/class-schedule";
+import { locations } from "@/lib/class-schedule";
+import { AdminDashboardOverview } from "@/components/admin-dashboard-overview";
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -99,9 +100,9 @@ function ClassBookingsManager() {
           <CardDescription>View and manage all class booking requests from members across all locations.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-           <div className="flex gap-4">
+           <div className="flex flex-wrap gap-4">
             <Select value={locationFilter} onValueChange={setLocationFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filter by location" />
               </SelectTrigger>
               <SelectContent>
@@ -110,7 +111,7 @@ function ClassBookingsManager() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as BookingStatus | 'all')}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -204,18 +205,15 @@ export default function AdminPage() {
                 <p className="text-muted-foreground">Welcome, Administrator. Manage all gym operations from here.</p>
             </div>
             
-            <Tabs defaultValue="class-bookings" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+            <Tabs defaultValue="dashboard" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                 <TabsTrigger value="class-bookings">Class Bookings</TabsTrigger>
                 <TabsTrigger value="trainer-bookings">Trainer Bookings</TabsTrigger>
                 <TabsTrigger value="chat-moderation">Chat Moderation</TabsTrigger>
               </TabsList>
               <TabsContent value="dashboard" className="mt-4">
-                 <Card>
-                    <CardHeader><CardTitle>Dashboard Overview</CardTitle></CardHeader>
-                    <CardContent><p>Summary statistics and quick actions will be shown here.</p></CardContent>
-                 </Card>
+                 <AdminDashboardOverview />
               </TabsContent>
               <TabsContent value="class-bookings" className="mt-4">
                 <ClassBookingsManager />

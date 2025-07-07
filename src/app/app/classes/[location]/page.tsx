@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/hooks/use-auth';
 import { locations, ClassInfo, ClassName } from '@/lib/class-schedule';
@@ -37,8 +37,9 @@ const ClassBadge = ({ name }: { name: ClassName }) => {
   );
 };
 
-export default function LocationClassesPage({ params }: { params: { location: string } }) {
-  const locationId = params.location;
+export default function LocationClassesPage() {
+  const params = useParams();
+  const locationId = params.location as string;
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();

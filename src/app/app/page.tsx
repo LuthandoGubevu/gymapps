@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap, Target, HeartPulse } from "lucide-react";
 import Image from "next/image";
+import { GymCapacityCard } from "@/components/gym-capacity-card";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -15,7 +16,8 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Ready to crush your goals today?</p>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <GymCapacityCard />
         <Card className="shadow-md border-l-4 border-primary">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Your Next Workout</CardTitle>

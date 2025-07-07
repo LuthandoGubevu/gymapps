@@ -1,0 +1,79 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =================================
+    // Helper Functions
+    // =================================
+    function isAdmin() {
+      // Check if the user's document has the 'admin' role.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isSignedIn() {
+      // Check if the user is authenticated.
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      // Check if the request is from the owner of the document.
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      // Get the authenticated user's data document.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // =================================
+    // User Profiles (`users`)
+    // =================================
+    match /users/{userId} {
+      // Users can create their own profile upon signup.
+      allow create: if isOwner(userId);
+      // Users can only read and update their own profile.
+      allow read, update: if isOwner(userId);
+    }
+    
+    // =================================
+    // Class Bookings (`classBookings`)
+    // =================================
+    match /classBookings/{bookingId} {
+      // Users can create bookings for themselves.
+      allow create: if isOwner(request.resource.data.userId);
+      // Users can read their own bookings; admins can read all bookings.
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      // Only admins can update status (accept/decline).
+      allow update: if isAdmin();
+      // Admins or the booking owner can delete a booking.
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    // =================================
+    // Trainer Bookings (`trainerBookings`)
+    // =================================
+    match /trainerBookings/{bookingId} {
+      // Same rules as class bookings.
+      allow create: if isOwner(request.resource.data.userId);
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    // =================================
+    // Group Chats (`chats`)
+    // =================================
+    match /chats/{locationId}/messages/{messageId} {
+      // Users can read messages in their primary gym's chat. Admins can read all chats.
+      allow read: if isSignedIn() && (getUserData().primaryGym == locationId || isAdmin());
+      // Users can create messages in their primary gym's chat. Admins can post to any chat.
+      allow create: if (isSignedIn() 
+                      && getUserData().primaryGym == locationId
+                      && isOwner(request.resource.data.sender.id)) || isAdmin();
+      // Admins can delete any message for moderation.
+      allow delete: if isAdmin();
+    }
+  }
+}

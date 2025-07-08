@@ -1,9 +1,13 @@
+
 "use client"
 
+import { useEffect, useState } from "react"
+import { collection, getDocs } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
-import { Users, MapPin, UserPlus } from "lucide-react"
+import { Users, MapPin, UserPlus, UsersRound } from "lucide-react"
 
 const mockAnalytics = {
   totalVisitorsToday: 1204,
@@ -26,9 +30,28 @@ const chartConfig = {
 
 
 export function AdminDashboardOverview() {
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTotalUsers = async () => {
+      try {
+        const usersCollectionRef = collection(db, "users");
+        const querySnapshot = await getDocs(usersCollectionRef);
+        setTotalUsers(querySnapshot.size);
+      } catch (error) {
+        console.error("Error fetching total users:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTotalUsers();
+  }, []);
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Visitors Today</CardTitle>
@@ -57,6 +80,20 @@ export function AdminDashboardOverview() {
           <CardContent>
             <div className="text-2xl font-bold">+{mockAnalytics.newMembersThisWeek}</div>
             <p className="text-xs text-muted-foreground">Keep up the growth!</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Registered Users</CardTitle>
+            <UsersRound className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+                <div className="text-2xl font-bold">...</div>
+            ) : (
+                <div className="text-2xl font-bold">{totalUsers.toLocaleString()}</div>
+            )}
+            <p className="text-xs text-muted-foreground">All-time registered members.</p>
           </CardContent>
         </Card>
       </div>

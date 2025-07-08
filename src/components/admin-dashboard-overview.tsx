@@ -1,24 +1,19 @@
 
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { collection, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import { Users, MapPin, UserPlus, UsersRound } from "lucide-react"
+import { useAllGymsOccupancy } from "@/hooks/use-gym-occupancy"
+import { useGyms } from "@/hooks/use-gyms"
+import { Skeleton } from "./ui/skeleton"
 
 const mockAnalytics = {
-  totalVisitorsToday: 1204,
-  busiestLocation: { name: 'Amalinda', active: 175 },
   newMembersThisWeek: 87,
-  gymCapacity: [
-    { name: 'Mdantsane', current: 45 },
-    { name: 'Quigney', current: 98 },
-    { name: 'Amalinda', current: 175 },
-    { name: 'Oxford', current: 78 },
-  ],
 };
 
 const chartConfig = {
@@ -31,7 +26,29 @@ const chartConfig = {
 
 export function AdminDashboardOverview() {
   const [totalUsers, setTotalUsers] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+
+  const { gyms, isLoading: gymsLoading } = useGyms();
+  const { occupancyData, isLoading: occupancyLoading } = useAllGymsOccupancy();
+
+  const chartData = useMemo(() => {
+    if (gymsLoading || !gyms) return [];
+    return gyms.map(gym => ({
+      name: gym.gymName,
+      current: occupancyData[gym.id] || 0,
+    })).sort((a,b) => b.current - a.current);
+  }, [gyms, occupancyData, gymsLoading]);
+
+  const busiestLocation = useMemo(() => {
+    if (!chartData || chartData.length === 0) return { name: 'N/A', active: 0 };
+    // The chart data is already sorted, so the first item is the busiest
+    return { name: chartData[0].name, active: chartData[0].current };
+  }, [chartData]);
+  
+  const totalVisitorsToday = useMemo(() => {
+    if(!chartData) return 0;
+    return chartData.reduce((sum, gym) => sum + gym.current, 0);
+  }, [chartData]);
 
   useEffect(() => {
     const fetchTotalUsers = async () => {
@@ -42,24 +59,26 @@ export function AdminDashboardOverview() {
       } catch (error) {
         console.error("Error fetching total users:", error);
       } finally {
-        setIsLoading(false);
+        setIsLoadingUsers(false);
       }
     };
 
     fetchTotalUsers();
   }, []);
 
+  const isLoading = gymsLoading || occupancyLoading || isLoadingUsers;
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Visitors Today</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Live Visitors</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAnalytics.totalVisitorsToday.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+5.2% from yesterday</p>
+            {isLoading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{totalVisitorsToday.toLocaleString()}</div>}
+            <p className="text-xs text-muted-foreground">Across all locations</p>
           </CardContent>
         </Card>
         <Card>
@@ -68,8 +87,8 @@ export function AdminDashboardOverview() {
             <MapPin className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAnalytics.busiestLocation.name}</div>
-            <p className="text-xs text-muted-foreground">{mockAnalytics.busiestLocation.active} members currently active</p>
+             {isLoading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{busiestLocation.name}</div>}
+             {isLoading ? <Skeleton className="h-4 w-full mt-1" /> : <p className="text-xs text-muted-foreground">{busiestLocation.active} members currently active</p>}
           </CardContent>
         </Card>
         <Card>
@@ -88,11 +107,7 @@ export function AdminDashboardOverview() {
             <UsersRound className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-                <div className="text-2xl font-bold">...</div>
-            ) : (
-                <div className="text-2xl font-bold">{totalUsers.toLocaleString()}</div>
-            )}
+            {isLoadingUsers ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{totalUsers.toLocaleString()}</div>}
             <p className="text-xs text-muted-foreground">All-time registered members.</p>
           </CardContent>
         </Card>
@@ -103,44 +118,52 @@ export function AdminDashboardOverview() {
           <CardDescription>A real-time overview of member presence at each location.</CardDescription>
         </CardHeader>
         <CardContent className="pl-2">
-          <ChartContainer config={chartConfig} className="h-[300px] w-full">
-            <ResponsiveContainer>
-                <BarChart 
-                    accessibilityLayer
-                    data={mockAnalytics.gymCapacity}
-                    margin={{
-                        top: 5,
-                        right: 10,
-                        left: -10,
-                        bottom: 0,
-                    }}
-                >
-                    <XAxis 
-                        dataKey="name" 
-                        stroke="hsl(var(--muted-foreground))" 
-                        fontSize={12} 
-                        tickLine={false} 
-                        axisLine={false} 
-                    />
-                    <YAxis 
-                        stroke="hsl(var(--muted-foreground))" 
-                        fontSize={12} 
-                        tickLine={false} 
-                        axisLine={false}
-                        tickFormatter={(value) => `${value}`}
-                    />
-                    <ChartTooltip 
-                        cursor={false} 
-                        content={<ChartTooltipContent indicator="dot" />} 
-                    />
-                    <Bar 
-                        dataKey="current" 
-                        fill="var(--color-current)" 
-                        radius={[4, 4, 0, 0]} 
-                    />
-                </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+          {isLoading ? <Skeleton className="h-[300px] w-full" /> : 
+            <ChartContainer config={chartConfig} className="h-[300px] w-full">
+              <ResponsiveContainer>
+                  <BarChart 
+                      accessibilityLayer
+                      data={chartData}
+                      layout="vertical"
+                      margin={{
+                          top: 5,
+                          right: 10,
+                          left: -10,
+                          bottom: 0,
+                      }}
+                  >
+                      <YAxis 
+                          dataKey="name" 
+                          type="category"
+                          stroke="hsl(var(--muted-foreground))" 
+                          fontSize={12} 
+                          tickLine={false} 
+                          axisLine={false} 
+                          width={80}
+                      />
+                      <XAxis 
+                          dataKey="current"
+                          type="number"
+                          stroke="hsl(var(--muted-foreground))" 
+                          fontSize={12} 
+                          tickLine={false} 
+                          axisLine={false}
+                          tickFormatter={(value) => `${value}`}
+                      />
+                      <ChartTooltip 
+                          cursor={false} 
+                          content={<ChartTooltipContent indicator="dot" />} 
+                      />
+                      <Bar 
+                          dataKey="current" 
+                          fill="var(--color-current)" 
+                          radius={[0, 4, 4, 0]} 
+                          layout="vertical"
+                      />
+                  </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          }
         </CardContent>
       </Card>
     </div>

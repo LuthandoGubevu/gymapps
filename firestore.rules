@@ -1,56 +1,52 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isUserAuthenticated() {
-      return request.auth != null;
-    }
-
-    function isUser(uid) {
-      return isUserAuthenticated() && request.auth.uid == uid;
-    }
-
-    function userRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-    }
-
+    
     function isAdmin() {
-      return isUserAuthenticated() && userRole() == 'admin';
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
-
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
     match /users/{userId} {
-      allow read: if isUser(userId) || isAdmin();
-      allow create: if isUser(userId);
-      allow update: if isUser(userId);
-      allow delete: if isAdmin();
+      allow read, update: if isOwner(userId) || isAdmin();
+      allow create: if request.auth != null;
       allow list: if isAdmin();
     }
-
+    
     match /gyms/{gymId} {
-      // Gym list must be public for the sign-up form and general app info.
-      allow read: if true; 
-      // Only admins can create, update, or delete gym locations.
+      allow read: if true;
+      allow list: if true;
       allow create, update, delete: if isAdmin();
     }
     
-    match /chats/{gymId}/messages/{messageId} {
-      allow read: if isUserAuthenticated() && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == gymId || isAdmin());
-      allow create: if isUserAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == gymId;
-      allow delete: if isAdmin();
-    }
-    
     match /classBookings/{bookingId} {
-      allow read, list: if isAdmin();
-      allow create: if isUserAuthenticated();
-      allow update: if isAdmin();
+      allow read, create: if request.auth != null;
+      allow update, delete: if isAdmin();
+      allow list: if isAdmin();
+    }
+
+    match /trainerBookings/{bookingId} {
+      allow read, create: if request.auth != null;
+      allow update, delete: if isAdmin();
+      allow list: if isAdmin();
     }
     
-    match /trainerBookings/{bookingId} {
-      allow read, list: if isAdmin();
-      allow create: if isUserAuthenticated();
-      allow update: if isAdmin();
+    match /chats/{locationId}/{message=**} {
+       allow read, write: if request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == locationId || isAdmin());
+    }
+
+    match /userPresence/{userId} {
+      // Admins can see all presence data for dashboards. Users can see their own.
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      // A user can create or update their own presence document.
+      allow create, update: if isOwner(userId);
+      // Nobody can delete presence documents.
+      allow delete: if false;
     }
   }
 }

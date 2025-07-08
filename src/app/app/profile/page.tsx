@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters." }),
@@ -34,6 +36,7 @@ const profileFormSchema = z.object({
   email: z.string().email(),
   primaryGym: z.string().optional(),
   fitnessGoals: z.string().max(200, { message: "Goals can be up to 200 characters." }).optional(),
+  autoPresenceEnabled: z.boolean().default(false),
 });
 
 export default function ProfilePage() {
@@ -53,6 +56,7 @@ export default function ProfilePage() {
       email: "",
       primaryGym: "",
       fitnessGoals: "",
+      autoPresenceEnabled: false,
     },
   });
 
@@ -81,6 +85,7 @@ export default function ProfilePage() {
             email: userData.email || user.email || "",
             primaryGym: userData.primaryGym || "",
             fitnessGoals: userData.fitnessGoals || "",
+            autoPresenceEnabled: userData.autoPresenceEnabled || false,
           });
         }
         setIsFetching(false);
@@ -105,6 +110,7 @@ export default function ProfilePage() {
         lastName: values.lastName,
         username: values.username,
         fitnessGoals: values.fitnessGoals,
+        autoPresenceEnabled: values.autoPresenceEnabled,
       });
 
       // Update Firebase Auth profile
@@ -220,6 +226,27 @@ export default function ProfilePage() {
                       </FormControl>
                       <FormMessage />
                       </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="autoPresenceEnabled"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel>Automatic Check-in</FormLabel>
+                        <FormDescription>
+                          Allow MetroGym to use your location to check you in automatically when you arrive.
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          aria-label="Automatic check-in toggle"
+                        />
+                      </FormControl>
+                    </FormItem>
                   )}
                 />
                 <Button type="submit" className="font-bold" size="lg" disabled={isLoading}>

@@ -55,3 +55,12 @@ export interface Gym extends GymFormData {
   classSchedule: ClassInfo[];
   trainers: Trainer[];
 }
+
+// For User Presence
+export interface UserPresence {
+  id?: string;
+  userId: string;
+  gymId: string;
+  isActive: boolean;
+  lastSeen: Timestamp;
+}

@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import { BackgroundWrapper } from '@/components/background-wrapper';
 import { GymsProvider } from '@/components/gyms-provider';
+import { PresenceProvider } from '@/components/presence-provider';
 
 export const metadata: Metadata = {
   title: 'MetroGym Rebuild',
@@ -29,8 +30,10 @@ export default function RootLayout({
         <BackgroundWrapper>
             <AuthProvider>
               <GymsProvider>
-                {children}
-                <Toaster />
+                <PresenceProvider>
+                  {children}
+                  <Toaster />
+                </PresenceProvider>
               </GymsProvider>
             </AuthProvider>
         </BackgroundWrapper>

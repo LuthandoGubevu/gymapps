@@ -10,7 +10,7 @@ export function BottomNav() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  if (!user) {
+  if (!user || user.role === 'admin') {
     return null;
   }
 

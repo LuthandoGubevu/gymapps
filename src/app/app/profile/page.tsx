@@ -9,6 +9,7 @@ import { db, auth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
 import { locations } from "@/lib/class-schedule";
 import { updateProfile } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +37,7 @@ const profileFormSchema = z.object({
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -60,6 +62,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
+      if (user.role === 'admin') {
+        router.push('/app/admin');
+        return;
+      }
       const fetchUserData = async () => {
         setIsFetching(true);
         const userDocRef = doc(db, 'users', user.uid);
@@ -79,7 +85,7 @@ export default function ProfilePage() {
       };
       fetchUserData();
     }
-  }, [user, form]);
+  }, [user, form, router]);
 
   async function onSubmit(values: z.infer<typeof profileFormSchema>) {
     if (!user || !auth.currentUser) {
@@ -119,7 +125,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (isFetching) {
+  if (isFetching || user?.role === 'admin') {
     return <ProfileSkeleton />;
   }
 

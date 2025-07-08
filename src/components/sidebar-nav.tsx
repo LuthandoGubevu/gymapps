@@ -41,7 +41,7 @@ export function SidebarNav() {
 
   const hasPrimaryGym = !!user?.primaryGym;
 
-  const menuItems = [
+  const userMenuItems = [
     { href: "/app", label: "Dashboard", icon: LayoutDashboard, disabled: false },
     { href: "/app/profile", label: "Profile", icon: User, disabled: false },
     { 
@@ -67,15 +67,17 @@ export function SidebarNav() {
     },
   ];
 
-  if (user?.role === 'admin') {
-    menuItems.push({ 
+  const adminMenuItems = [
+    { 
         href: "/app/admin", 
         label: "Admin Panel", 
         icon: Shield, 
         disabled: false,
         notificationCount: totalPending 
-    });
-  }
+    }
+  ];
+  
+  const menuItems = user?.role === 'admin' ? adminMenuItems : userMenuItems;
 
   return (
     <>
@@ -90,9 +92,9 @@ export function SidebarNav() {
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.label}>
               <SidebarMenuButton
-                isActive={!item.disabled && (item.href === '/app' ? pathname === item.href : pathname.startsWith(item.href))}
+                isActive={!item.disabled && (item.href === '/app/admin' ? pathname === item.href : pathname.startsWith(item.href))}
                 onClick={() => !item.disabled && router.push(item.href)}
-                tooltip={item.tooltip || item.label}
+                tooltip={(item as any).tooltip || item.label}
                 disabled={item.disabled}
                 aria-disabled={item.disabled}
               >

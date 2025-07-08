@@ -90,31 +90,34 @@ export default function DashboardPage() {
   };
 
   function onSubmit(data: z.infer<typeof prFormSchema>) {
-      const newRecordData = {
-          ...data,
-          date: format(data.date, "yyyy-MM-dd"),
-      };
-
-      if (editingRecord) {
-          // Update existing record
-          setPersonalRecords(prevRecords => 
-              prevRecords.map(pr => pr.id === editingRecord.id ? { ...pr, ...newRecordData } : pr)
-          );
-      } else {
-          // Add new record
-          const existingPrIndex = personalRecords.findIndex(pr => pr.exercise.toLowerCase() === data.exercise.toLowerCase());
-          if (existingPrIndex !== -1) {
-             setPersonalRecords(prevRecords => {
-                 const updatedRecords = [...prevRecords];
-                 updatedRecords[existingPrIndex] = { ...updatedRecords[existingPrIndex], ...newRecordData };
-                 return updatedRecords;
-             });
-          } else {
-              setPersonalRecords(prevRecords => [...prevRecords, { ...newRecordData, id: `pr${Date.now()}` }]);
-          }
-      }
-      
-      handleOpenChange(false);
+    if (editingRecord) {
+        // When editing, always use today's date for the record.
+        const updatedRecordData = {
+            ...data,
+            date: format(new Date(), "yyyy-MM-dd"),
+        };
+        setPersonalRecords(prevRecords => 
+            prevRecords.map(pr => pr.id === editingRecord.id ? { ...pr, ...updatedRecordData } : pr)
+        );
+    } else {
+        // For new records, use the date the user picked.
+        const newRecordData = {
+            ...data,
+            date: format(data.date, "yyyy-MM-dd"),
+        };
+        const existingPrIndex = personalRecords.findIndex(pr => pr.exercise.toLowerCase() === data.exercise.toLowerCase());
+        if (existingPrIndex !== -1) {
+           setPersonalRecords(prevRecords => {
+               const updatedRecords = [...prevRecords];
+               updatedRecords[existingPrIndex] = { ...updatedRecords[existingPrIndex], ...newRecordData };
+               return updatedRecords;
+           });
+        } else {
+            setPersonalRecords(prevRecords => [...prevRecords, { ...newRecordData, id: `pr${Date.now()}` }]);
+        }
+    }
+    
+    handleOpenChange(false);
   }
 
   return (

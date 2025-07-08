@@ -10,18 +10,21 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarSeparator,
+  SidebarMenuBadge,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { usePendingBookings } from "@/hooks/use-pending-bookings";
 
 export function SidebarNav() {
   const pathname = usePathname();
   const { user } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { totalPending } = usePendingBookings();
 
   const handleSignOut = async () => {
     try {
@@ -65,7 +68,13 @@ export function SidebarNav() {
   ];
 
   if (user?.role === 'admin') {
-    menuItems.push({ href: "/app/admin", label: "Admin Panel", icon: Shield, disabled: false });
+    menuItems.push({ 
+        href: "/app/admin", 
+        label: "Admin Panel", 
+        icon: Shield, 
+        disabled: false,
+        notificationCount: totalPending 
+    });
   }
 
   return (
@@ -89,6 +98,7 @@ export function SidebarNav() {
               >
                   <item.icon />
                   <span>{item.label}</span>
+                  {(item as any).notificationCount > 0 && <SidebarMenuBadge>{(item as any).notificationCount}</SidebarMenuBadge>}
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}

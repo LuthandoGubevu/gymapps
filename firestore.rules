@@ -4,88 +4,81 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // =================================
-    // Helper Functions
-    // =================================
+    // --- Helper Functions ---
+    function isAdmin() {
+      // Checks if the user document exists and has the 'admin' role.
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      // Checks if the requester is the owner of the document.
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
     function isUserAuthenticated() {
+      // Checks if a user is signed in.
       return request.auth != null;
     }
     
-    function getUserData() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
+    // --- Collections Rules ---
 
-    function isAdmin() {
-      // Check for authentication first to prevent errors on null user
-      return isUserAuthenticated() && getUserData().role == 'admin';
-    }
-    
-    function isRequestingOwnData(userId) {
-        return request.auth.uid == userId;
-    }
-
-    // =================================
-    // Collection Rules
-    // =================================
-
-    // Users Collection
+    // User Profiles
     match /users/{userId} {
-      // Admins can perform any action on any user profile
-      allow read, write: if isAdmin();
-      
-      // Authenticated users can create their own user document on sign up
+      // Admins can read any user profile. Users can only read/update their own.
+      allow read, update: if isOwner(userId) || isAdmin();
+      // Any authenticated user can create a profile (sign up).
       allow create: if isUserAuthenticated();
-      
-      // Users can read and update their own profile information
-      allow read, update: if isUserAuthenticated() && isRequestingOwnData(userId);
+      // Admins can list all users (for total user count on dashboard).
+      allow list: if isAdmin();
     }
-    
-    // Gyms Collection
+
+    // Gym Information
     match /gyms/{gymId} {
-        // Any authenticated user can view the list of gyms and their details
-        allow read: if isUserAuthenticated();
-        
-        // Only admins can add, edit, or remove gyms
-        allow create, update, delete: if isAdmin();
+      // Any authenticated user can read gym info (for dropdowns, schedules, etc.).
+      allow read: if isUserAuthenticated();
+      // Only admins can create, update, or delete gyms.
+      allow create, update, delete: if isAdmin();
     }
 
-    // Class Bookings Collection
+    // Class Bookings
     match /classBookings/{bookingId} {
-        // Admins can read and write (accept/decline) any booking
-        allow read, write: if isAdmin();
-        
-        // Users can create a new booking request for themselves
-        allow create: if isUserAuthenticated() && request.resource.data.userId == request.auth.uid;
-
-        // Users can read their own bookings to see the status
-        allow read: if isUserAuthenticated() && resource.data.userId == request.auth.uid;
+      // Admins can read/update any booking. Users can read their own.
+      allow read, update: if isAdmin() || (isUserAuthenticated() && resource.data.userId == request.auth.uid);
+      // Users can only create bookings for themselves.
+      allow create: if isUserAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Admins need to list all bookings for the dashboard view.
+      allow list: if isAdmin(); 
     }
 
-    // Trainer Bookings Collection
+    // Trainer Bookings
     match /trainerBookings/{bookingId} {
-        // Admins can read and write (accept/decline) any booking
-        allow read, write: if isAdmin();
-        
-        // Users can create a new booking request for themselves
-        allow create: if isUserAuthenticated() && request.resource.data.userId == request.auth.uid;
-
-        // Users can read their own bookings to see the status
-        allow read: if isUserAuthenticated() && resource.data.userId == request.auth.uid;
+      // Admins can read/update any booking. Users can read their own.
+      allow read, update: if isAdmin() || (isUserAuthenticated() && resource.data.userId == request.auth.uid);
+      // Users can only create bookings for themselves.
+      allow create: if isUserAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Admins need to list all bookings for the dashboard view.
+      allow list: if isAdmin();
     }
-    
-    // Chats Collection
-    match /chats/{locationId}/messages/{messageId} {
-        // Admins can read/delete any message and post announcements
-        allow read, delete: if isAdmin();
-        allow create: if isAdmin() && request.resource.data.isAnnouncement == true;
 
-        function isMemberOfGym(gymLocationId) {
-            return getUserData().primaryGym == gymLocationId;
-        }
+    // Live Chat
+    match /chats/{gymId}/messages/{messageId} {
+      function isMemberOfGym(gymIdToCheck) {
+        // Checks if the user's primary gym matches the chat room ID.
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == gymIdToCheck;
+      }
+      
+      // Admins can read/delete any message in any chat for moderation.
+      allow read, delete: if isAdmin();
 
-        // Users can read and write messages in their primary gym's chat
-        allow read: if isUserAuthenticated() && isMemberOfGym(locationId);
-        allow create: if isUserAuthenticated() && isMemberOfGym(locationId) && request.resource.data.isAnnouncement != true;
+      // Users can read all messages in their own gym's chat.
+      allow read: if isUserAuthenticated() && isMemberOfGym(gymId);
+      
+      // Users can create messages in their own gym's chat and must be the sender.
+      allow create: if isUserAuthenticated() && 
+                       isMemberOfGym(gymId) &&
+                       request.resource.data.sender.id == request.auth.uid;
     }
   }
 }

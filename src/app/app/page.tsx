@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { GymCapacityCard } from "@/components/gym-capacity-card";
-import { Target, Scale, CalendarCheck, Trophy, Award, Medal, Star, Flame, Zap, Check } from "lucide-react";
+import { RankProgressCard } from "@/components/rank-progress-card";
+import { Trophy, Award, Medal, Star, Flame, Zap, Check } from "lucide-react";
 
 const mockPrs = [
   { exercise: 'Bench Press', weight: '100 kg', date: '2024-07-15' },
@@ -31,38 +32,9 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Ready to crush your goals today?</p>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <RankProgressCard />
         <GymCapacityCard />
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Weekly Progress</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3 / 5 Workouts</div>
-            <p className="text-xs text-muted-foreground">Keep up the great work!</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Next Class</CardTitle>
-            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Spinning</div>
-            <p className="text-xs text-muted-foreground">Today at 5:00 PM</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Recent Weigh-In</CardTitle>
-            <Scale className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">85.2 kg</div>
-            <p className="text-xs text-green-400">-0.5 kg from last week</p>
-          </CardContent>
-        </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

@@ -559,7 +559,7 @@ export default function AdminPage() {
             </div>
             
             <Tabs defaultValue="analytics" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
+              <TabsList className="h-auto grid w-full grid-cols-1 sm:h-10 sm:grid-cols-3 md:grid-cols-5">
                 <TabsTrigger value="analytics">
                     <BarChart2 className="mr-2 size-4"/>
                     Analytics

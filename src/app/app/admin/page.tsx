@@ -530,6 +530,15 @@ export default function AdminPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
     const { pendingClassBookings, pendingTrainerBookings } = usePendingBookings();
+    const [activeTab, setActiveTab] = useState('analytics');
+
+    const adminNavItems = [
+      { id: 'analytics', label: 'Analytics', icon: BarChart2, badge: 0 },
+      { id: 'class-bookings', label: 'Class Bookings', icon: CalendarCheck, badge: pendingClassBookings },
+      { id: 'trainer-bookings', label: 'Trainer Bookings', icon: UserCheck, badge: pendingTrainerBookings },
+      { id: 'chat-moderation', label: 'Chat Moderation', icon: MessageSquare, badge: 0 },
+      { id: 'manage-gyms', label: 'Manage Gyms', icon: Building2, badge: 0 },
+    ];
 
     useEffect(() => {
         if (!loading && user?.role !== 'admin') {
@@ -549,7 +558,7 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 pb-20 md:pb-0">
             <div>
                 <h1 className="text-2xl font-bold md:text-3xl flex items-center gap-2">
                     <ShieldCheck className="text-primary size-8" />
@@ -558,8 +567,8 @@ export default function AdminPage() {
                 <p className="text-muted-foreground">Shared dashboard for managing all gym operations.</p>
             </div>
             
-            <Tabs defaultValue="analytics" className="w-full">
-              <TabsList className="grid h-auto w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:h-10 lg:grid-cols-5">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="hidden h-auto w-full grid-cols-1 sm:grid-cols-2 md:grid md:grid-cols-3 lg:h-10 lg:grid-cols-5">
                 <TabsTrigger value="analytics">
                     <BarChart2 className="mr-2 size-4"/>
                     Analytics
@@ -597,6 +606,31 @@ export default function AdminPage() {
                  <ManageGymsForm />
               </TabsContent>
             </Tabs>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/20 bg-background/90 backdrop-blur-sm md:hidden">
+              <div className="flex h-16 items-center justify-around">
+                {adminNavItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={cn(
+                      'flex flex-col items-center justify-center gap-1 p-2 text-sm font-medium transition-colors relative',
+                      activeTab === item.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                    )}
+                    aria-label={item.label}
+                  >
+                    <item.icon className="size-6" />
+                    <span className="text-xs">{item.label}</span>
+                    {item.badge > 0 && 
+                      <Badge variant="destructive" className="absolute top-0 right-0 h-4 w-4 p-0 text-xs flex items-center justify-center translate-x-1/2 -translate-y-1/2">
+                        {item.badge}
+                      </Badge>
+                    }
+                  </button>
+                ))}
+              </div>
+            </nav>
         </div>
     );
 }

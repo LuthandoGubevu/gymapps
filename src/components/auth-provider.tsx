@@ -59,7 +59,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user && isAppPage) {
       router.push('/login');
     } else if (user && isAuthPage) {
-      router.push('/app');
+      if (user.role === 'admin') {
+        router.push('/app/admin');
+      } else {
+        router.push('/app');
+      }
     }
   }, [user, loading, pathname, router]);
 

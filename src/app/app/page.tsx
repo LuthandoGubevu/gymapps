@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -53,9 +54,16 @@ const prFormSchema = z.object({
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>(initialPrs);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<PersonalRecord | null>(null);
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+        router.push('/app/admin');
+    }
+  }, [user, router]);
 
   const form = useForm<z.infer<typeof prFormSchema>>({
     resolver: zodResolver(prFormSchema),
@@ -118,6 +126,20 @@ export default function DashboardPage() {
     }
     
     handleOpenChange(false);
+  }
+
+  if (user?.role === 'admin') {
+    return (
+         <div className="flex h-full w-full items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p className="text-muted-foreground">Redirecting to admin panel...</p>
+            </div>
+         </div>
+    );
   }
 
   return (

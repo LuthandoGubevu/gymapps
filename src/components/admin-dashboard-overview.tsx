@@ -2,7 +2,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, query, where, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -11,10 +11,6 @@ import { Users, MapPin, UserPlus, UsersRound } from "lucide-react"
 import { useAllGymsOccupancy } from "@/hooks/use-gym-occupancy"
 import { useGyms } from "@/hooks/use-gyms"
 import { Skeleton } from "./ui/skeleton"
-
-const mockAnalytics = {
-  newMembersThisWeek: 87,
-};
 
 const chartConfig = {
   current: {
@@ -27,6 +23,8 @@ const chartConfig = {
 export function AdminDashboardOverview() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [newMembersThisWeek, setNewMembersThisWeek] = useState(0);
+  const [isLoadingNewMembers, setIsLoadingNewMembers] = useState(true);
 
   const { gyms, isLoading: gymsLoading } = useGyms();
   const { occupancyData, isLoading: occupancyLoading } = useAllGymsOccupancy();
@@ -52,6 +50,7 @@ export function AdminDashboardOverview() {
 
   useEffect(() => {
     const fetchTotalUsers = async () => {
+      setIsLoadingUsers(true);
       try {
         const usersCollectionRef = collection(db, "users");
         const querySnapshot = await getDocs(usersCollectionRef);
@@ -63,10 +62,30 @@ export function AdminDashboardOverview() {
       }
     };
 
+    const fetchNewMembers = async () => {
+      setIsLoadingNewMembers(true);
+      try {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const oneWeekAgoTimestamp = Timestamp.fromDate(oneWeekAgo);
+
+        const usersCollectionRef = collection(db, "users");
+        const q = query(usersCollectionRef, where("createdAt", ">=", oneWeekAgoTimestamp));
+        
+        const querySnapshot = await getDocs(q);
+        setNewMembersThisWeek(querySnapshot.size);
+      } catch (error) {
+        console.error("Error fetching new members:", error);
+      } finally {
+        setIsLoadingNewMembers(false);
+      }
+    };
+
     fetchTotalUsers();
+    fetchNewMembers();
   }, []);
 
-  const isLoading = gymsLoading || occupancyLoading || isLoadingUsers;
+  const isLoading = gymsLoading || occupancyLoading;
 
   return (
     <div className="space-y-6">
@@ -97,7 +116,7 @@ export function AdminDashboardOverview() {
             <UserPlus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{mockAnalytics.newMembersThisWeek}</div>
+            {isLoadingNewMembers ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">+{newMembersThisWeek}</div>}
             <p className="text-xs text-muted-foreground">Keep up the growth!</p>
           </CardContent>
         </Card>

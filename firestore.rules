@@ -3,61 +3,60 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // --- Helper Functions ---
-    function isAuth() {
+
+    // Helper function to check if the requesting user is an admin.
+    function isAdmin() {
+      // Check if user is authenticated first to avoid errors on unauthenticated requests.
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper function to check if the user is authenticated.
+    function isAuthenticated() {
       return request.auth != null;
     }
-    
-    function isOwner(userId) {
-      return isAuth() && request.auth.uid == userId;
-    }
 
-    function isAdmin() {
-      // To check for admin role, we must be able to read our own user document.
-      // The rule on /users/{userId} allows this.
-      return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    // --- Rules for 'users' collection ---
+    // Rules for the 'users' collection
     match /users/{userId} {
-      // Admins can read any user document and list the entire collection.
-      // Users can read and update their own document.
-      allow read, update: if isOwner(userId) || isAdmin();
-      
-      // Users can create their own document on signup.
-      allow create: if isOwner(userId);
+      // Admins can read/write any user document. Users can read/update their own.
+      allow read, update: if isAuthenticated() && (isAdmin() || request.auth.uid == userId);
+      // An authenticated user can create their own user document during sign-up.
+      allow create: if isAuthenticated();
     }
 
-    // --- Rules for booking collections ---
-    match /{bookingCollection=classBookings,trainerBookings}/{bookingId} {
-      // Users can create bookings for themselves.
-      allow create: if isOwner(request.resource.data.userId);
-
-      // Admins can read/update all bookings. Users can read their own.
-      allow read, update: if isAdmin() || (isAuth() && resource.data.userId == request.auth.uid);
-      
-      // Preserve booking history.
-      allow delete: if false;
+    // Rules for class bookings
+    match /classBookings/{bookingId} {
+        // Admins can read all bookings (for listing) and update their status.
+        allow read, update: if isAdmin();
+        // A user can create a booking for themselves.
+        allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
 
-    // --- Rules for 'chats' collection ---
+    // Rules for trainer bookings
+    match /trainerBookings/{bookingId} {
+        // Admins can read all bookings (for listing) and update their status.
+        allow read, update: if isAdmin();
+        // A user can create a booking for themselves.
+        allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Rules for location-based chats
     match /chats/{locationId}/messages/{messageId} {
-      function userBelongsToGym() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == locationId;
-      }
-      
-      // Admins or members of the gym can read the chat.
-      allow read: if isAuth() && (isAdmin() || userBelongsToGym());
+      // Users can read messages in their primary gym's chat. Admins can read any chat.
+      allow read: if isAuthenticated() && (isAdmin() || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == locationId);
 
-      // Admins can post announcements. Members can post messages.
-      allow create: if isAuth() && ( (isAdmin() && request.resource.data.sender.id == 'admin') || (userBelongsToGym() && isOwner(request.resource.data.sender.id)) );
-      
-      // Admins can delete messages.
+      // Admins can delete messages for moderation.
       allow delete: if isAdmin();
-      
-      // Messages are immutable.
-      allow update: if false;
+
+      // Creating messages:
+      // - Announcements can only be posted by admins.
+      // - Regular messages can be posted by a user in their primary gym's chat.
+      allow create: if isAuthenticated() && (
+        (request.resource.data.isAnnouncement == true && isAdmin()) ||
+        (
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == locationId &&
+            request.resource.data.sender.id == request.auth.uid
+        )
+      );
     }
   }
 }

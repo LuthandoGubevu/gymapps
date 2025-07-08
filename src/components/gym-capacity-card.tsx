@@ -22,9 +22,9 @@ export function GymCapacityCard() {
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center pt-4 flex-grow">
             <div className="flex items-baseline justify-center gap-2">
-                <p className="text-6xl font-bold tracking-tighter">
+                <div className="text-6xl font-bold tracking-tighter">
                   {isLoading ? <Skeleton className="h-16 w-24" /> : occupancy}
-                </p>
+                </div>
                 <p className="text-base text-muted-foreground self-end pb-1">members</p>
             </div>
             <p className="mt-4 text-xs italic text-muted-foreground text-center">

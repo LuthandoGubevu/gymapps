@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -98,21 +99,18 @@ export default function DashboardPage() {
   };
 
   function onSubmit(data: z.infer<typeof prFormSchema>) {
+    const newRecordData = {
+        ...data,
+        date: format(data.date, "yyyy-MM-dd"),
+    };
+
     if (editingRecord) {
-        // When editing, always use today's date for the record.
-        const updatedRecordData = {
-            ...data,
-            date: format(new Date(), "yyyy-MM-dd"),
-        };
+        // Update the existing PR by its ID
         setPersonalRecords(prevRecords => 
-            prevRecords.map(pr => pr.id === editingRecord.id ? { ...pr, ...updatedRecordData } : pr)
+            prevRecords.map(pr => pr.id === editingRecord.id ? { ...pr, ...newRecordData } : pr)
         );
     } else {
-        // For new records, use the date the user picked.
-        const newRecordData = {
-            ...data,
-            date: format(data.date, "yyyy-MM-dd"),
-        };
+        // Add a new PR, or update if exercise name already exists
         const existingPrIndex = personalRecords.findIndex(pr => pr.exercise.toLowerCase() === data.exercise.toLowerCase());
         if (existingPrIndex !== -1) {
            setPersonalRecords(prevRecords => {
@@ -239,7 +237,7 @@ export default function DashboardPage() {
                               <FormItem>
                                   <FormLabel>Exercise</FormLabel>
                                   <FormControl>
-                                      <Input placeholder="e.g., Bench Press" {...field} disabled={!!editingRecord} />
+                                      <Input placeholder="e.g., Bench Press" {...field} />
                                   </FormControl>
                                   <FormMessage />
                               </FormItem>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -7,7 +8,7 @@ import * as z from "zod";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
-import { locations } from "@/lib/class-schedule";
+import { useGyms } from "@/hooks/use-gyms";
 import { updateProfile } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
@@ -41,6 +42,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
+  const { gyms } = useGyms();
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
@@ -57,8 +59,8 @@ export default function ProfilePage() {
   const primaryGymName = useMemo(() => {
     const gymId = form.watch("primaryGym");
     if (!gymId) return "Not Set";
-    return locations.find(loc => loc.id === gymId)?.name || "Unknown Gym";
-  }, [form]);
+    return gyms.find(loc => loc.id === gymId)?.gymName || "Unknown Gym";
+  }, [form, gyms]);
 
   useEffect(() => {
     if (user) {

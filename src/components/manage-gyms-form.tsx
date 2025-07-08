@@ -1,14 +1,15 @@
+
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import Image from 'next/image';
+import { Gym, GymFormData, manageGymsFormSchema } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,33 +33,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from './ui/skeleton';
-
-
-const manageGymsFormSchema = z.object({
-  gymName: z.string().min(3, { message: "Gym name must be at least 3 characters." }),
-  address: z.string().min(10, { message: "Address seems too short." }),
-  imageUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
-  latitude: z.coerce.number().min(-90).max(90),
-  longitude: z.coerce.number().min(-180).max(180),
-  crowdCount: z.coerce.number().int().nonnegative().optional(),
-  waitTime: z.string().optional(),
-  thresholdLow: z.coerce.number().int().nonnegative(),
-  thresholdModerate: z.coerce.number().int().nonnegative(),
-  thresholdPacked: z.coerce.number().int().nonnegative(),
-  promoTags: z.string().optional(),
-  musicGenres: z.string().optional(),
-  djInfo: z.string().optional(),
-  announcement: z.string().optional(),
-  promoExpiry: z.date().optional(),
-});
-
-type GymFormData = z.infer<typeof manageGymsFormSchema>;
-
-export interface Gym extends GymFormData {
-  id: string;
-  createdAt: Timestamp;
-  promoExpiry?: Timestamp;
-}
 
 const getStatus = (count: number, low: number, moderate: number) => {
     if (count <= low) return { label: 'Low', color: 'bg-green-500/20 text-green-400 border-green-500/30' };
@@ -135,7 +109,7 @@ function GymFormDialog({ isOpen, onOpenChange, onSubmit, isSubmitting, gym }: {
                             <h3 className="text-lg font-semibold flex items-center gap-2"><Globe className="text-primary"/>Basic Info</h3>
                             <FormField control={form.control} name="gymName" render={({ field }) => (<FormItem><FormLabel>Gym Name</FormLabel><FormControl><Input placeholder="MetroGym Downtown" {...field} /></FormControl><FormMessage /></FormItem>)} />
                             <FormField control={form.control} name="address" render={({ field }) => (<FormItem><FormLabel>Address</FormLabel><FormControl><Input placeholder="123 Fitness Ave, Gymtown" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                            <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL</FormLabel><FormControl><Input placeholder="https://example.com/gym.jpg" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                            <FormField control={form.control} name="imageUrl" render={({ field }) => (<FormItem><FormLabel>Image URL</FormLabel><FormControl><Input placeholder="https://placehold.co/600x400.png" {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
                         <Separator />
                         <div className="space-y-4">
@@ -234,7 +208,7 @@ export function ManageGymsForm() {
     
     const handleFormSubmit = async (values: GymFormData) => {
         setIsSubmitting(true);
-        const dataPayload = {
+        const dataPayload: Omit<Gym, 'id' | 'createdAt' | 'classSchedule' | 'trainers'> & { promoExpiry: Timestamp | null } = {
             ...values,
             promoExpiry: values.promoExpiry ? Timestamp.fromDate(values.promoExpiry) : null,
         };
@@ -244,7 +218,13 @@ export function ManageGymsForm() {
                 await updateDoc(doc(db, 'gyms', editingGym.id), dataPayload);
                 toast({ title: '✅ Gym Updated', description: `${values.gymName} has been updated.` });
             } else {
-                await addDoc(collection(db, 'gyms'), { ...dataPayload, createdAt: serverTimestamp() });
+                const fullPayload = {
+                    ...dataPayload,
+                    classSchedule: [],
+                    trainers: [],
+                    createdAt: serverTimestamp()
+                };
+                await addDoc(collection(db, 'gyms'), fullPayload);
                 toast({ title: '✅ Gym Added', description: `${values.gymName} has been added.` });
             }
             setIsDialogOpen(false);

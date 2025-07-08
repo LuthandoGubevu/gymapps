@@ -1,10 +1,12 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/hooks/use-auth';
-import { locations, ClassInfo, ClassName } from '@/lib/class-schedule';
+import { useGyms } from '@/hooks/use-gyms';
+import { ClassInfo, ClassName } from '@/lib/types';
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,8 +45,9 @@ export default function LocationClassesPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { gyms, isLoading: gymsLoading } = useGyms();
   
-  const location = useMemo(() => locations.find(l => l.id === locationId), [locationId]);
+  const location = useMemo(() => gyms.find(l => l.id === locationId), [gyms, locationId]);
 
   const [selectedDay, setSelectedDay] = useState<string>('all');
   const [selectedTime, setSelectedTime] = useState<string>('all');
@@ -62,19 +65,19 @@ export default function LocationClassesPage() {
   }, [user, authLoading, locationId, router, toast]);
   
   const availableDays = useMemo(() => {
-    if (!location) return [];
-    return [...new Set(location.schedule.map(c => c.day))];
+    if (!location?.classSchedule) return [];
+    return [...new Set(location.classSchedule.map(c => c.day))];
   }, [location]);
 
   const availableTimes = useMemo(() => {
-    if (!location) return [];
-    const times = location.schedule.map(c => c.time);
+    if (!location?.classSchedule) return [];
+    const times = location.classSchedule.map(c => c.time);
     return [...new Set(times)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   }, [location]);
 
   const filteredClasses = useMemo(() => {
-    if (!location) return [];
-    return location.schedule.filter(c => 
+    if (!location?.classSchedule) return [];
+    return location.classSchedule.filter(c => 
       (selectedDay === 'all' || c.day === selectedDay) &&
       (selectedTime === 'all' || c.time === selectedTime)
     );
@@ -92,7 +95,7 @@ export default function LocationClassesPage() {
         userName: user.displayName || "Unknown User",
         userEmail: user.email,
         gymId: locationId,
-        gymName: location?.name,
+        gymName: location?.gymName,
         classId: cls.id,
         className: cls.name,
         classTime: cls.time,
@@ -116,7 +119,7 @@ export default function LocationClassesPage() {
     }
   };
 
-  if (authLoading || (!user && !location)) {
+  if (gymsLoading || authLoading) {
       return <div>Loading...</div> // Or a proper skeleton loader
   }
 
@@ -127,7 +130,7 @@ export default function LocationClassesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold md:text-3xl">Class Schedule: {location.name}</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">Class Schedule: {location.gymName}</h1>
         <p className="text-muted-foreground">Book your spot in one of our classes.</p>
       </div>
 
@@ -204,7 +207,10 @@ export default function LocationClassesPage() {
                 ) : (
                 <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                    No classes match your selection. Try a different filter.
+                        {(!location.classSchedule || location.classSchedule.length === 0) 
+                            ? "No classes scheduled for this location yet."
+                            : "No classes match your selection. Try a different filter."
+                        }
                     </TableCell>
                 </TableRow>
                 )}

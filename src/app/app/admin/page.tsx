@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -6,7 +7,7 @@ import { useEffect, useState, useMemo, FormEvent } from "react";
 import { collection, query, onSnapshot, doc, updateDoc, Timestamp, deleteDoc, addDoc, serverTimestamp, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { locations } from "@/lib/class-schedule";
+import { useGyms } from "@/hooks/use-gyms";
 import { AdminDashboardOverview } from "@/components/admin-dashboard-overview";
 import { usePendingBookings } from "@/hooks/use-pending-bookings";
 import { cn } from "@/lib/utils";
@@ -99,6 +100,7 @@ function ClassBookingsManager() {
   const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { gyms } = useGyms();
 
   useEffect(() => {
     const q = query(collection(db, "classBookings"));
@@ -153,7 +155,7 @@ function ClassBookingsManager() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
-                {locations.map(loc => <SelectItem key={loc.id} value={loc.id}>MetroGym {loc.name}</SelectItem>)}
+                {gyms.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.gymName}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as BookingStatus | 'all')}>
@@ -227,6 +229,7 @@ function TrainerBookingsManager() {
     const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('all');
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const { toast } = useToast();
+    const { gyms } = useGyms();
 
     useEffect(() => {
         const q = query(collection(db, "trainerBookings"));
@@ -281,7 +284,7 @@ function TrainerBookingsManager() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Locations</SelectItem>
-                            {locations.map(loc => <SelectItem key={loc.id} value={loc.id}>MetroGym {loc.name}</SelectItem>)}
+                            {gyms.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.gymName}</SelectItem>)}
                         </SelectContent>
                     </Select>
                     <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as BookingStatus | 'all')}>
@@ -349,7 +352,8 @@ function TrainerBookingsManager() {
 
 // Chat Moderation Manager Component
 function ChatModerationManager() {
-    const [selectedLocation, setSelectedLocation] = useState<string>(locations[0].id);
+    const { gyms, isLoading: gymsLoading } = useGyms();
+    const [selectedLocation, setSelectedLocation] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [announcement, setAnnouncement] = useState("");
@@ -357,6 +361,12 @@ function ChatModerationManager() {
     const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const { toast } = useToast();
+
+    useEffect(() => {
+        if (!gymsLoading && gyms.length > 0 && !selectedLocation) {
+            setSelectedLocation(gyms[0].id);
+        }
+    }, [gyms, gymsLoading, selectedLocation]);
 
     const formatTimestamp = (timestamp: Timestamp | null) => {
         if (!timestamp) return 'Sending...';
@@ -437,13 +447,13 @@ function ChatModerationManager() {
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                     <label htmlFor="location-filter" className="text-sm font-medium">Select Gym Location</label>
-                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                    <Select value={selectedLocation} onValueChange={setSelectedLocation} disabled={gymsLoading}>
                         <SelectTrigger id="location-filter" className="w-full mt-2 sm:w-[220px]">
-                            <SelectValue placeholder="Select a location" />
+                            <SelectValue placeholder={gymsLoading ? "Loading..." : "Select a location"} />
                         </SelectTrigger>
                         <SelectContent>
-                            {locations.map(loc => (
-                                <SelectItem key={loc.id} value={loc.id}>MetroGym {loc.name}</SelectItem>
+                            {gyms.map(loc => (
+                                <SelectItem key={loc.id} value={loc.id}>{loc.gymName}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>

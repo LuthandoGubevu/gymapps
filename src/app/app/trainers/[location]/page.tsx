@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -5,13 +6,8 @@ import { notFound, useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/hooks/use-auth';
-import { 
-  trainerLocations, 
-  getAvailableDaysForLocation, 
-  getAvailableTimesForLocation, 
-  Trainer, 
-  Specialty 
-} from '@/lib/trainer-schedule';
+import { useGyms } from '@/hooks/use-gyms';
+import { Trainer, Specialty, Day } from '@/lib/types';
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,8 +39,9 @@ export default function LocationTrainersPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { gyms, isLoading: gymsLoading } = useGyms();
   
-  const location = useMemo(() => trainerLocations.find(l => l.id === locationId), [locationId]);
+  const location = useMemo(() => gyms.find(l => l.id === locationId), [gyms, locationId]);
 
   const [selectedDay, setSelectedDay] = useState<string>('all');
   const [selectedTime, setSelectedTime] = useState<string>('all');
@@ -62,17 +59,30 @@ export default function LocationTrainersPage() {
   }, [user, authLoading, locationId, router, toast]);
 
   const availableDays = useMemo(() => {
-    if (!location) return [];
-    return getAvailableDaysForLocation(location.id);
+    if (!location?.trainers) return [];
+    const days = new Set<Day>();
+    location.trainers.forEach(trainer => {
+        Object.keys(trainer.availability).forEach(day => days.add(day as Day));
+    });
+    const dayOrder: Day[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    return Array.from(days).sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
   }, [location]);
 
   const availableTimes = useMemo(() => {
-    if (!location) return [];
-    return getAvailableTimesForLocation(location.id);
+    if (!location?.trainers) return [];
+    const times = new Set<string>();
+    location.trainers.forEach(trainer => {
+        Object.values(trainer.availability).forEach(daySlots => {
+            if(daySlots) {
+                daySlots.forEach(slot => times.add(slot));
+            }
+        });
+    });
+    return Array.from(times).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   }, [location]);
 
   const filteredTrainers = useMemo(() => {
-    if (!location) return [];
+    if (!location?.trainers) return [];
     if (selectedDay === 'all' || selectedTime === 'all') {
       return location.trainers;
     }
@@ -98,7 +108,7 @@ export default function LocationTrainersPage() {
         userName: user.displayName || "Unknown User",
         userEmail: user.email,
         gymId: locationId,
-        gymName: location?.name,
+        gymName: location?.gymName,
         trainerId: trainer.id,
         trainerName: trainer.name,
         day: selectedDay,
@@ -122,7 +132,7 @@ export default function LocationTrainersPage() {
     }
   };
 
-  if (authLoading || (!user && !location)) {
+  if (gymsLoading || authLoading) {
       return <div>Loading...</div>
   }
 
@@ -133,7 +143,7 @@ export default function LocationTrainersPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold md:text-3xl">Trainers at {location.name}</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">Trainers at {location.gymName}</h1>
         <p className="text-muted-foreground">Book a session with one of our expert trainers.</p>
       </div>
 
@@ -199,7 +209,7 @@ export default function LocationTrainersPage() {
                    disabled={selectedDay === 'all' || selectedTime === 'all' || isBooking === trainer.id}
                   >
                     <UserCheck className="mr-2 size-4"/>
-                    {isBooking === trainer.id ? 'Requesting...' : 'Request Booking'}
+                    {isBooking === trainer.id ? 'Requesting...' : 'Requesting Booking'}
                  </Button>
               </CardFooter>
             </Card>
@@ -207,10 +217,12 @@ export default function LocationTrainersPage() {
         ) : (
           <div className="md:col-span-2 lg:col-span-3">
             <Card className="h-48 flex items-center justify-center">
-                <p className="text-muted-foreground">
-                    {selectedDay === 'all' || selectedTime === 'all' 
-                        ? 'Please select a day and time to see available trainers.'
-                        : 'No trainers available for this selection. Try another time or day.'
+                <p className="text-muted-foreground text-center">
+                    {(!location.trainers || location.trainers.length === 0) 
+                        ? 'No trainers are configured for this location yet.'
+                        : (selectedDay === 'all' || selectedTime === 'all') 
+                            ? 'Please select a day and time to see available trainers.'
+                            : 'No trainers available for this selection. Try another time or day.'
                     }
                 </p>
             </Card>

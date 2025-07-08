@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent, useMemo } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, query, orderBy, onSnapshot, Timestamp, serverTimestamp } from 'firebase/firestore';
-import { locations } from '@/lib/class-schedule';
+import { useGyms } from '@/hooks/use-gyms';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +38,8 @@ export default function ChatPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const location = locations.find(l => l.id === locationId);
+  const { gyms, isLoading: gymsLoading } = useGyms();
+  const location = useMemo(() => gyms.find(l => l.id === locationId), [gyms, locationId]);
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -114,7 +115,7 @@ export default function ChatPage() {
     }
   };
 
-  if (authLoading || (!user && !location)) {
+  if (authLoading || gymsLoading || (!user && !location)) {
       return <div>Loading...</div> // Or a proper skeleton loader
   }
 
@@ -125,7 +126,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-[calc(100vh-theme(spacing.24))] flex-col">
        <div className="mb-4">
-        <h1 className="text-2xl font-bold md:text-3xl mt-2">MetroGym {location.name} Group Chat</h1>
+        <h1 className="text-2xl font-bold md:text-3xl mt-2">MetroGym {location.gymName} Group Chat</h1>
       </div>
 
       <Card className="flex flex-1 flex-col shadow-lg">

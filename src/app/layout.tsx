@@ -1,8 +1,10 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth-provider';
 import { BackgroundWrapper } from '@/components/background-wrapper';
+import { GymsProvider } from '@/components/gyms-provider';
 
 export const metadata: Metadata = {
   title: 'MetroGym Rebuild',
@@ -26,8 +28,10 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <BackgroundWrapper>
             <AuthProvider>
-              {children}
-              <Toaster />
+              <GymsProvider>
+                {children}
+                <Toaster />
+              </GymsProvider>
             </AuthProvider>
         </BackgroundWrapper>
       </body>

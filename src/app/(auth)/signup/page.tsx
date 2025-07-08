@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -9,7 +10,7 @@ import * as z from "zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { locations } from "@/lib/class-schedule";
+import { useGyms } from "@/hooks/use-gyms";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +48,7 @@ export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { gyms, isLoading: gymsLoading } = useGyms();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -199,16 +201,16 @@ export default function SignupPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Primary Gym</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={gymsLoading}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select your home gym location" />
+                        <SelectValue placeholder={gymsLoading ? "Loading gyms..." : "Select your home gym location"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {locations.map(location => (
-                        <SelectItem key={location.id} value={location.id}>
-                          MetroGym {location.name}
+                      {gyms.map(gym => (
+                        <SelectItem key={gym.id} value={gym.id}>
+                          {gym.gymName}
                         </SelectItem>
                       ))}
                     </SelectContent>

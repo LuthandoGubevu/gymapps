@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
@@ -11,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Send } from 'lucide-react';
+import { Send, Megaphone } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -23,6 +24,7 @@ interface Message {
   };
   text: string;
   timestamp: Timestamp | null;
+  isAnnouncement?: boolean;
 }
 
 const formatTimestamp = (timestamp: Timestamp | null) => {
@@ -136,30 +138,45 @@ export default function ChatPage() {
                 <Skeleton className="h-12 w-1/2" />
               </div>
             ) : messages.length > 0 ? (
-                messages.map((msg) => (
+                messages.map((msg) => {
+                  const isMyMessage = msg.sender.id === user?.uid;
+
+                  if (msg.isAnnouncement) {
+                    return (
+                        <div key={msg.id} className="w-full">
+                            <div className="my-2 mx-auto max-w-lg p-3 text-center rounded-lg bg-primary/10 border border-primary/20 text-primary-foreground">
+                                <p className="font-bold flex items-center justify-center gap-2 text-primary"><Megaphone/> Announcement</p>
+                                <p className="text-sm mt-1">{msg.text}</p>
+                                <p className="mt-2 text-xs opacity-70">{formatTimestamp(msg.timestamp)}</p>
+                            </div>
+                        </div>
+                    );
+                  }
+                  
+                  return (
                     <div
                         key={msg.id}
                         className={cn('flex items-end gap-2', {
-                            'justify-end': msg.sender.id === user?.uid,
+                            'justify-end': isMyMessage,
                         })}
                         >
-                        {msg.sender.id !== user?.uid && (
+                        {!isMyMessage && (
                              <Avatar className="h-8 w-8">
                                 <AvatarFallback>{msg.sender.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                         )}
                         <div
                             className={cn('max-w-xs rounded-2xl p-3 md:max-w-md', {
-                            'bg-primary text-primary-foreground rounded-br-none': msg.sender.id === user?.uid,
-                            'bg-muted rounded-bl-none': msg.sender.id !== user?.uid,
+                            'bg-primary text-primary-foreground rounded-br-none': isMyMessage,
+                            'bg-muted rounded-bl-none': !isMyMessage,
                             })}
                         >
-                            <p className="text-sm font-bold">{msg.sender.id === user?.uid ? 'You' : msg.sender.name}</p>
+                            <p className="text-sm font-bold">{isMyMessage ? 'You' : msg.sender.name}</p>
                             <p className="text-sm">{msg.text}</p>
                             <p className="mt-1 text-xs opacity-70 text-right">{formatTimestamp(msg.timestamp)}</p>
                         </div>
                     </div>
-                ))
+                )})
             ) : (
                  <div className="flex h-full items-center justify-center">
                     <p className="text-muted-foreground">No messages yet. Start the conversation!</p>

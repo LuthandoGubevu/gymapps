@@ -1,22 +1,37 @@
+
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
-import { collection, query, onSnapshot, doc, updateDoc, Timestamp } from "firebase/firestore";
+import { useEffect, useState, useMemo, FormEvent } from "react";
+import { collection, query, onSnapshot, doc, updateDoc, Timestamp, deleteDoc, addDoc, serverTimestamp, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { locations } from "@/lib/class-schedule";
 import { AdminDashboardOverview } from "@/components/admin-dashboard-overview";
 import { usePendingBookings } from "@/hooks/use-pending-bookings";
+import { cn } from "@/lib/utils";
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, CalendarCheck, UserCheck, MessageSquare, Loader2, BarChart2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ShieldCheck, CalendarCheck, UserCheck, MessageSquare, Loader2, BarChart2, Trash2, Megaphone, Send } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 type BookingStatus = 'pending' | 'accepted' | 'declined';
 
@@ -50,6 +65,18 @@ interface TrainerBooking {
     time: string;
     status: BookingStatus;
     createdAt: Timestamp;
+}
+
+// Interface for Chat Messages
+interface Message {
+  id: string;
+  sender: {
+    id: string;
+    name: string;
+  };
+  text: string;
+  timestamp: Timestamp | null;
+  isAnnouncement?: boolean;
 }
 
 const statusVariantMap: Record<BookingStatus, "default" | "secondary" | "destructive"> = {
@@ -121,12 +148,12 @@ function ClassBookingsManager() {
         <CardContent className="space-y-4">
            <div className="flex flex-wrap gap-4">
             <Select value={locationFilter} onValueChange={setLocationFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[220px]">
                 <SelectValue placeholder="Filter by location" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Locations</SelectItem>
-                {locations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}
+                {locations.map(loc => <SelectItem key={loc.id} value={loc.id}>MetroGym {loc.name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as BookingStatus | 'all')}>
@@ -249,12 +276,12 @@ function TrainerBookingsManager() {
             <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-4">
                     <Select value={locationFilter} onValueChange={setLocationFilter}>
-                        <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectTrigger className="w-full sm:w-[220px]">
                             <SelectValue placeholder="Filter by location" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Locations</SelectItem>
-                            {locations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}
+                            {locations.map(loc => <SelectItem key={loc.id} value={loc.id}>MetroGym {loc.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                     <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as BookingStatus | 'all')}>
@@ -320,6 +347,184 @@ function TrainerBookingsManager() {
     );
 }
 
+// Chat Moderation Manager Component
+function ChatModerationManager() {
+    const [selectedLocation, setSelectedLocation] = useState<string>(locations[0].id);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [announcement, setAnnouncement] = useState("");
+    const [isPosting, setIsPosting] = useState(false);
+    const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
+    const { toast } = useToast();
+
+    const formatTimestamp = (timestamp: Timestamp | null) => {
+        if (!timestamp) return 'Sending...';
+        return new Date(timestamp.seconds * 1000).toLocaleString();
+    };
+
+    useEffect(() => {
+        if (!selectedLocation) return;
+
+        setIsLoading(true);
+        const messagesColRef = collection(db, 'chats', selectedLocation, 'messages');
+        const q = query(messagesColRef, orderBy('timestamp', 'desc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedMessages = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as Message));
+            setMessages(fetchedMessages);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching messages: ", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not fetch messages." });
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [selectedLocation, toast]);
+    
+    const handlePostAnnouncement = async (e: FormEvent) => {
+        e.preventDefault();
+        if (announcement.trim() === '' || !selectedLocation) return;
+
+        setIsPosting(true);
+        const messagesColRef = collection(db, 'chats', selectedLocation, 'messages');
+        try {
+            await addDoc(messagesColRef, {
+                text: announcement,
+                sender: { id: 'admin', name: 'MetroGym Admin' },
+                timestamp: serverTimestamp(),
+                isAnnouncement: true,
+            });
+            setAnnouncement('');
+            toast({ title: "Success", description: "Announcement posted." });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Send Error', description: 'Could not post announcement.' });
+        } finally {
+            setIsPosting(false);
+        }
+    };
+
+    const handleDeleteMessage = async () => {
+        if (!messageToDelete || !selectedLocation) return;
+
+        try {
+            await deleteDoc(doc(db, 'chats', selectedLocation, 'messages', messageToDelete.id));
+            toast({ title: "Success", description: "Message deleted." });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Failed to delete message." });
+        } finally {
+            setMessageToDelete(null);
+            setIsAlertOpen(false);
+        }
+    };
+    
+    const openDeleteDialog = (message: Message) => {
+        setMessageToDelete(message);
+        setIsAlertOpen(true);
+    };
+    
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><MessageSquare/>Group Chat Moderation</CardTitle>
+          <CardDescription>View messages, delete content, and post announcements for a specific gym location.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                    <label htmlFor="location-filter" className="text-sm font-medium">Select Gym Location</label>
+                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                        <SelectTrigger id="location-filter" className="w-full mt-2 sm:w-[220px]">
+                            <SelectValue placeholder="Select a location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {locations.map(loc => (
+                                <SelectItem key={loc.id} value={loc.id}>MetroGym {loc.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <form onSubmit={handlePostAnnouncement} className="space-y-2">
+                <label htmlFor="announcement-input" className="text-sm font-medium">Post an Announcement</label>
+                <div className="flex gap-2">
+                    <Textarea
+                        id="announcement-input"
+                        value={announcement}
+                        onChange={(e) => setAnnouncement(e.target.value)}
+                        placeholder="Type your announcement here..."
+                        className="flex-1"
+                        disabled={isPosting}
+                    />
+                    <Button type="submit" size="icon" disabled={isPosting || announcement.trim() === ''}>
+                        {isPosting ? <Loader2 className="animate-spin" /> : <Send />}
+                    </Button>
+                </div>
+            </form>
+
+            <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Live Chat Feed</h3>
+                <div className="h-[500px] overflow-y-auto rounded-md border p-4 space-y-4 bg-muted/20">
+                    {isLoading ? (
+                        <div className="flex justify-center items-center h-full">
+                            <Loader2 className="animate-spin text-primary" />
+                        </div>
+                    ) : messages.length > 0 ? (
+                        messages.map(msg => (
+                            <div key={msg.id} className={cn(
+                                "flex items-start gap-3 p-3 rounded-lg shadow-sm",
+                                msg.isAnnouncement ? "bg-primary/10 border border-primary/20" : "bg-background"
+                            )}>
+                                <Avatar>
+                                    <AvatarFallback>{msg.isAnnouncement ? 'A' : msg.sender.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-center">
+                                        <p className="font-bold text-sm">{msg.sender.name} {msg.isAnnouncement && <Megaphone className="inline-block ml-2 text-primary size-4"/>}</p>
+                                        <span className="text-xs text-muted-foreground">{formatTimestamp(msg.timestamp)}</span>
+                                    </div>
+                                    <p className="text-sm mt-1">{msg.text}</p>
+                                </div>
+                                {!msg.isAnnouncement && (
+                                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0" onClick={() => openDeleteDialog(msg)}>
+                                        <Trash2 className="size-4" />
+                                    </Button>
+                                )}
+                            </div>
+                        ))
+                    ) : (
+                        <div className="flex justify-center items-center h-full">
+                            <p className="text-muted-foreground">No messages in this chat yet.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </CardContent>
+
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the message.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteMessage} className="bg-destructive hover:bg-destructive/80 text-destructive-foreground">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+      </Card>
+    );
+}
+
+
 // Main Admin Page Component
 export default function AdminPage() {
     const { user, loading } = useAuth();
@@ -367,7 +572,10 @@ export default function AdminPage() {
                     Trainer Bookings
                     {pendingTrainerBookings > 0 && <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">{pendingTrainerBookings}</Badge>}
                 </TabsTrigger>
-                <TabsTrigger value="chat-moderation">Chat Moderation</TabsTrigger>
+                <TabsTrigger value="chat-moderation">
+                    <MessageSquare className="mr-2 size-4"/>
+                    Chat Moderation
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="analytics" className="mt-4">
                  <AdminDashboardOverview />
@@ -379,21 +587,7 @@ export default function AdminPage() {
                  <TrainerBookingsManager />
               </TabsContent>
               <TabsContent value="chat-moderation" className="mt-4">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><MessageSquare/>Group Chat Moderation</CardTitle>
-                        <CardDescription>Tools to manage community interactions and communications.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <p className="text-muted-foreground">The full chat moderation toolkit is under development. Upcoming features will include:</p>
-                        <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-                            <li>Viewing live chat feeds for each gym location.</li>
-                            <li>Deleting inappropriate messages with a single click.</li>
-                            <li>Posting announcements that appear highlighted in the chat.</li>
-                            <li>Temporarily muting or banning users from the chat.</li>
-                        </ul>
-                    </CardContent>
-                 </Card>
+                 <ChatModerationManager />
               </TabsContent>
             </Tabs>
         </div>

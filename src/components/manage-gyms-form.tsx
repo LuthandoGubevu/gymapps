@@ -55,8 +55,8 @@ function GymFormDialog({ isOpen, onOpenChange, onSubmit, isSubmitting, gym }: {
             gymName: "", address: "", imageUrl: "",
             latitude: 0, longitude: 0, crowdCount: 0,
             waitTime: "", thresholdLow: 20, thresholdModerate: 50,
-            thresholdPacked: 80, promoTags: "", musicGenres: "",
-            djInfo: "", announcement: "", promoExpiry: undefined,
+            thresholdPacked: 80, promotionTags: "", workoutFocusAreas: "",
+            trainerOrGuestInfo: "", generalGymNotice: "", offerExpiryDate: undefined,
         },
     });
 
@@ -64,15 +64,15 @@ function GymFormDialog({ isOpen, onOpenChange, onSubmit, isSubmitting, gym }: {
         if (gym) {
             form.reset({
                 ...gym,
-                promoExpiry: gym.promoExpiry ? gym.promoExpiry.toDate() : undefined
+                offerExpiryDate: gym.offerExpiryDate ? gym.offerExpiryDate.toDate() : undefined
             });
         } else {
             form.reset({
                 gymName: "", address: "", imageUrl: "",
                 latitude: 0, longitude: 0, crowdCount: 0,
                 waitTime: "", thresholdLow: 20, thresholdModerate: 50,
-                thresholdPacked: 80, promoTags: "", musicGenres: "",
-                djInfo: "", announcement: "", promoExpiry: undefined,
+                thresholdPacked: 80, promotionTags: "", workoutFocusAreas: "",
+                trainerOrGuestInfo: "", generalGymNotice: "", offerExpiryDate: undefined,
             });
         }
     }, [gym, form]);
@@ -136,14 +136,14 @@ function GymFormDialog({ isOpen, onOpenChange, onSubmit, isSubmitting, gym }: {
                         </div>
                         <Separator />
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold flex items-center gap-2"><Tag className="text-primary"/>Promotions</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <FormField control={form.control} name="promoTags" render={({ field }) => (<FormItem><FormLabel>Tags</FormLabel><FormControl><Input placeholder="Live DJ, Protein Special" {...field} /></FormControl><FormDescription>Comma-separated.</FormDescription></FormItem>)} />
-                                <FormField control={form.control} name="musicGenres" render={({ field }) => (<FormItem><FormLabel>Music Genres</FormLabel><FormControl><Input placeholder="House, Hip-Hop" {...field} /></FormControl></FormItem>)} />
-                                <FormField control={form.control} name="djInfo" render={({ field }) => (<FormItem><FormLabel>DJ Info</FormLabel><FormControl><Input placeholder="DJ Spinfast" {...field} /></FormControl></FormItem>)} />
-                                <FormField control={form.control} name="promoExpiry" render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Promotion Expiry</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal",!field.value && "text-muted-foreground")}>{field.value ? (format(field.value, "PPP")) : (<span>Pick a date</span>)}<Clock className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus/></PopoverContent></Popover><FormMessage /></FormItem>)} />
-                            </div>
-                            <FormField control={form.control} name="announcement" render={({ field }) => (<FormItem><FormLabel>Announcement</FormLabel><FormControl><Textarea placeholder="Special announcement for this gym..." {...field} /></FormControl><FormMessage /></FormItem>)} />
+                             <h3 className="text-lg font-semibold flex items-center gap-2"><Tag className="text-primary"/>Promotions</h3>
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <FormField control={form.control} name="promotionTags" render={({ field }) => (<FormItem><FormLabel>Promotion Tags</FormLabel><FormControl><Input placeholder="e.g., Free Protein Shake, Referral Bonus" {...field} /></FormControl><FormDescription>Comma-separated.</FormDescription></FormItem>)} />
+                                 <FormField control={form.control} name="workoutFocusAreas" render={({ field }) => (<FormItem><FormLabel>Workout Focus Areas</FormLabel><FormControl><Input placeholder="e.g., Cardio, Strength Training, HIIT" {...field} /></FormControl></FormItem>)} />
+                                 <FormField control={form.control} name="trainerOrGuestInfo" render={({ field }) => (<FormItem><FormLabel>Trainer or Guest Info</FormLabel><FormControl><Input placeholder="e.g., Session with Coach Sipho" {...field} /></FormControl></FormItem>)} />
+                                 <FormField control={form.control} name="offerExpiryDate" render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Offer Expiry Date</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal",!field.value && "text-muted-foreground")}>{field.value ? (format(field.value, "PPP")) : (<span>Pick a date</span>)}<Clock className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus/></PopoverContent></Popover><FormMessage /></FormItem>)} />
+                             </div>
+                             <FormField control={form.control} name="generalGymNotice" render={({ field }) => (<FormItem><FormLabel>General Gym Notice</FormLabel><FormControl><Textarea placeholder="e.g., Renovations at Midrand Gym" {...field} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
                         <div className="flex justify-end gap-4 pt-4">
                             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}><X className="mr-2"/>Cancel</Button>
@@ -207,14 +207,14 @@ export function ManageGymsForm() {
     
     const handleFormSubmit = async (values: GymFormData) => {
         setIsSubmitting(true);
-        const dataPayload: Omit<Gym, 'id' | 'createdAt' | 'classSchedule' | 'trainers'> & { promoExpiry: Timestamp | null } = {
+        const dataPayload: Omit<Gym, 'id' | 'createdAt' | 'classSchedule' | 'trainers'> & { offerExpiryDate: Timestamp | null } = {
             ...values,
-            promoExpiry: values.promoExpiry ? Timestamp.fromDate(values.promoExpiry) : null,
+            offerExpiryDate: values.offerExpiryDate ? Timestamp.fromDate(values.offerExpiryDate) : null,
         };
 
         try {
             if (editingGym) {
-                await updateDoc(doc(db, 'gyms', editingGym.id), dataPayload);
+                await updateDoc(doc(db, 'gyms', editingGym.id), dataPayload as any);
                 toast({ title: '✅ Gym Updated', description: `${values.gymName} has been updated.` });
             } else {
                 const fullPayload = {
@@ -257,7 +257,7 @@ export function ManageGymsForm() {
                             <Card key={gym.id} className="flex flex-col">
                                 <CardHeader>
                                     {gym.imageUrl && (
-                                    <div className="w-full h-32 bg-muted rounded-lg relative overflow-hidden mb-4">
+                                    <div className="relative mb-4 h-32 w-full overflow-hidden rounded-lg bg-muted">
                                         <Image src={gym.imageUrl} alt={gym.gymName} layout="fill" objectFit="cover" data-ai-hint="gym interior" />
                                     </div>
                                     )}

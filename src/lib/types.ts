@@ -39,11 +39,11 @@ export const manageGymsFormSchema = z.object({
   thresholdLow: z.coerce.number().int().nonnegative(),
   thresholdModerate: z.coerce.number().int().nonnegative(),
   thresholdPacked: z.coerce.number().int().nonnegative(),
-  promoTags: z.string().optional(),
-  musicGenres: z.string().optional(),
-  djInfo: z.string().optional(),
-  announcement: z.string().optional(),
-  promoExpiry: z.date().optional(),
+  promotionTags: z.string().optional(),
+  workoutFocusAreas: z.string().optional(),
+  trainerOrGuestInfo: z.string().optional(),
+  generalGymNotice: z.string().optional(),
+  offerExpiryDate: z.date().optional(),
 });
 export type GymFormData = z.infer<typeof manageGymsFormSchema>;
 
@@ -51,7 +51,7 @@ export type GymFormData = z.infer<typeof manageGymsFormSchema>;
 export interface Gym extends GymFormData {
   id: string;
   createdAt: Timestamp;
-  promoExpiry?: Timestamp;
+  offerExpiryDate?: Timestamp;
   classSchedule: ClassInfo[];
   trainers: Trainer[];
 }

@@ -2,9 +2,24 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Zap, Target, HeartPulse } from "lucide-react";
-import Image from "next/image";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { GymCapacityCard } from "@/components/gym-capacity-card";
+import { Target, Scale, CalendarCheck, Trophy, Award, Medal, Star, Flame, Zap, Check } from "lucide-react";
+
+const mockPrs = [
+  { exercise: 'Bench Press', weight: '100 kg', date: '2024-07-15' },
+  { exercise: 'Squat', weight: '140 kg', date: '2024-07-10' },
+  { exercise: 'Deadlift', weight: '180 kg', date: '2024-07-12' },
+];
+
+const mockAchievements = [
+  { id: 1, name: 'First 5 Visits', icon: Star, description: 'Completed your first 5 workouts.', achieved: true },
+  { id: 2, name: 'Month Challenger', icon: Medal, description: 'Visited 12 times in a month.', achieved: true },
+  { id: 3, name: 'Early Bird', icon: Flame, description: 'Completed 10 morning workouts.', achieved: false },
+  { id: 4, name: 'HIIT Expert', icon: Zap, description: 'Attended 5 HIIT classes.', achieved: true },
+  { id: 5, name: 'Consistent Kilo', icon: Trophy, description: 'Lifted over 10,000kg in a month.', achieved: true },
+  { id: 6, name: 'New PR!', icon: Award, description: 'Set a new personal record.', achieved: true },
+];
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -20,17 +35,7 @@ export default function DashboardPage() {
         <GymCapacityCard />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Your Next Workout</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Full Body Strength</div>
-            <p className="text-xs text-muted-foreground">Today at 5:00 PM</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Weekly Goal</CardTitle>
+            <CardTitle className="text-sm font-medium">Weekly Progress</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -40,34 +45,72 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Activity Streak</CardTitle>
-            <HeartPulse className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Next Class</CardTitle>
+            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12 Days</div>
-            <p className="text-xs text-muted-foreground">You're on fire!</p>
+            <div className="text-2xl font-bold">Spinning</div>
+            <p className="text-xs text-muted-foreground">Today at 5:00 PM</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Recent Weigh-In</CardTitle>
+            <Scale className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">85.2 kg</div>
+            <p className="text-xs text-green-400">-0.5 kg from last week</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-            <CardTitle>Class Schedule</CardTitle>
-            <CardDescription>Check out this week's featured classes.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6 md:grid-cols-2">
-            <div className="flex flex-col space-y-4">
-                <Image src="https://placehold.co/600x400.png" alt="Yoga class" width={600} height={400} className="rounded-lg object-cover" data-ai-hint="yoga stretching" />
-                <h3 className="font-semibold text-lg">Sunrise Yoga</h3>
-                <p className="text-muted-foreground text-sm">Find your balance and start your day with intention. Suitable for all levels.</p>
-            </div>
-            <div className="flex flex-col space-y-4">
-                <Image src="https://placehold.co/600x400.png" alt="HIIT class" width={600} height={400} className="rounded-lg object-cover" data-ai-hint="gym workout" />
-                <h3 className="font-semibold text-lg">HIIT Power Hour</h3>
-                <p className="text-muted-foreground text-sm">A high-intensity interval training session to maximize calorie burn and build strength.</p>
-            </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Trophy className="text-primary"/>Personal Records</CardTitle>
+                <CardDescription>Your all-time best lifts. Keep pushing!</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Exercise</TableHead>
+                    <TableHead>Weight</TableHead>
+                    <TableHead className="text-right">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockPrs.map(pr => (
+                    <TableRow key={pr.exercise}>
+                      <TableCell className="font-medium">{pr.exercise}</TableCell>
+                      <TableCell>{pr.weight}</TableCell>
+                      <TableCell className="text-right">{pr.date}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Award className="text-primary"/>Achievements</CardTitle>
+                <CardDescription>Milestones you've unlocked.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-3 gap-4 md:grid-cols-4 lg:grid-cols-3">
+              {mockAchievements.slice(0, 6).map(ach => (
+                <div key={ach.id} className="flex flex-col items-center text-center gap-2" title={ach.description}>
+                   <div className="relative">
+                      <ach.icon className={`size-10 ${ach.achieved ? 'text-primary' : 'text-muted-foreground/50'}`} />
+                      {ach.achieved && <Check className="absolute -bottom-1 -right-1 size-5 rounded-full bg-green-500 text-white p-0.5" />}
+                   </div>
+                   <p className={`text-xs ${ach.achieved ? 'text-foreground' : 'text-muted-foreground'}`}>{ach.name}</p>
+                </div>
+              ))}
+            </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

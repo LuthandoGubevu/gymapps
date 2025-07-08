@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,18 +19,19 @@ import { Calendar } from "@/components/ui/calendar";
 
 import { GymCapacityCard } from "@/components/gym-capacity-card";
 import { RankProgressCard } from "@/components/rank-progress-card";
-import { Trophy, Award, Medal, Star, Flame, Zap, Check, PlusCircle, CalendarIcon } from "lucide-react";
+import { Trophy, Award, Medal, Star, Flame, Zap, Check, PlusCircle, CalendarIcon, Pencil } from "lucide-react";
 
 interface PersonalRecord {
+  id: string;
   exercise: string;
   weight: string;
   date: string;
 }
 
 const initialPrs: PersonalRecord[] = [
-  { exercise: 'Bench Press', weight: '100 kg', date: '2024-07-15' },
-  { exercise: 'Squat', weight: '140 kg', date: '2024-07-10' },
-  { exercise: 'Deadlift', weight: '180 kg', date: '2024-07-12' },
+  { id: 'pr1', exercise: 'Bench Press', weight: '100 kg', date: '2024-07-15' },
+  { id: 'pr2', exercise: 'Squat', weight: '140 kg', date: '2024-07-10' },
+  { id: 'pr3', exercise: 'Deadlift', weight: '180 kg', date: '2024-07-12' },
 ];
 
 const mockAchievements = [
@@ -54,6 +55,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>(initialPrs);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<PersonalRecord | null>(null);
 
   const form = useForm<z.infer<typeof prFormSchema>>({
     resolver: zodResolver(prFormSchema),
@@ -63,25 +65,56 @@ export default function DashboardPage() {
     },
   });
 
+  const handleOpenChange = (open: boolean) => {
+      setIsDialogOpen(open);
+      if (!open) {
+          setEditingRecord(null);
+          form.reset({ exercise: "", weight: "", date: undefined });
+      }
+  };
+
+  const handleAddClick = () => {
+    setEditingRecord(null);
+    form.reset({ exercise: "", weight: "", date: new Date() });
+    setIsDialogOpen(true);
+  };
+  
+  const handleEditClick = (record: PersonalRecord) => {
+      setEditingRecord(record);
+      form.reset({
+          exercise: record.exercise,
+          weight: record.weight,
+          date: new Date(record.date),
+      });
+      setIsDialogOpen(true);
+  };
+
   function onSubmit(data: z.infer<typeof prFormSchema>) {
-      const newRecord: PersonalRecord = {
+      const newRecordData = {
           ...data,
           date: format(data.date, "yyyy-MM-dd"),
       };
-      
-      setPersonalRecords(prevRecords => {
-          const existingPrIndex = prevRecords.findIndex(pr => pr.exercise.toLowerCase() === data.exercise.toLowerCase());
+
+      if (editingRecord) {
+          // Update existing record
+          setPersonalRecords(prevRecords => 
+              prevRecords.map(pr => pr.id === editingRecord.id ? { ...pr, ...newRecordData } : pr)
+          );
+      } else {
+          // Add new record
+          const existingPrIndex = personalRecords.findIndex(pr => pr.exercise.toLowerCase() === data.exercise.toLowerCase());
           if (existingPrIndex !== -1) {
-              const updatedRecords = [...prevRecords];
-              updatedRecords[existingPrIndex] = newRecord;
-              return updatedRecords;
+             setPersonalRecords(prevRecords => {
+                 const updatedRecords = [...prevRecords];
+                 updatedRecords[existingPrIndex] = { ...updatedRecords[existingPrIndex], ...newRecordData };
+                 return updatedRecords;
+             });
           } else {
-              return [...prevRecords, newRecord];
+              setPersonalRecords(prevRecords => [...prevRecords, { ...newRecordData, id: `pr${Date.now()}` }]);
           }
-      });
+      }
       
-      form.reset();
-      setIsDialogOpen(false);
+      handleOpenChange(false);
   }
 
   return (
@@ -106,96 +139,10 @@ export default function DashboardPage() {
                         <CardTitle className="flex items-center gap-2"><Trophy className="text-primary"/>Personal Records</CardTitle>
                         <CardDescription>Your all-time best lifts. Keep pushing!</CardDescription>
                     </div>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                                <PlusCircle className="mr-2 h-4 w-4"/>
-                                Add PR
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                                <DialogTitle>Add or Update Personal Record</DialogTitle>
-                                <DialogDescription>
-                                    Log a new personal best. If the exercise exists, it will be updated.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="exercise"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Exercise</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="e.g., Bench Press" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="weight"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Weight</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="e.g., 105 kg" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="date"
-                                        render={({ field }) => (
-                                            <FormItem className="flex flex-col">
-                                                <FormLabel>Date</FormLabel>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <FormControl>
-                                                            <Button
-                                                                variant={"outline"}
-                                                                className={cn(
-                                                                    "w-full pl-3 text-left font-normal",
-                                                                    !field.value && "text-muted-foreground"
-                                                                )}
-                                                            >
-                                                                {field.value ? (
-                                                                    format(field.value, "PPP")
-                                                                ) : (
-                                                                    <span>Pick a date</span>
-                                                                )}
-                                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                            </Button>
-                                                        </FormControl>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0" align="start">
-                                                        <Calendar
-                                                            mode="single"
-                                                            selected={field.value}
-                                                            onSelect={field.onChange}
-                                                            disabled={(date) =>
-                                                                date > new Date() || date < new Date("1900-01-01")
-                                                            }
-                                                            initialFocus
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <DialogFooter>
-                                        <Button type="submit">Save Record</Button>
-                                    </DialogFooter>
-                                </form>
-                            </Form>
-                        </DialogContent>
-                    </Dialog>
+                    <Button variant="outline" size="sm" onClick={handleAddClick}>
+                        <PlusCircle className="mr-2 h-4 w-4"/>
+                        Add PR
+                    </Button>
                 </div>
             </CardHeader>
             <CardContent>
@@ -204,19 +151,26 @@ export default function DashboardPage() {
                   <TableRow>
                     <TableHead>Exercise</TableHead>
                     <TableHead>Weight</TableHead>
-                    <TableHead className="text-right">Date</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {personalRecords.length > 0 ? personalRecords.map(pr => (
-                    <TableRow key={pr.exercise}>
+                    <TableRow key={pr.id}>
                       <TableCell className="font-medium">{pr.exercise}</TableCell>
                       <TableCell>{pr.weight}</TableCell>
-                      <TableCell className="text-right">{pr.date}</TableCell>
+                      <TableCell>{pr.date}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(pr)}>
+                           <Pencil className="h-4 w-4" />
+                           <span className="sr-only">Edit PR</span>
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   )) : (
                     <TableRow>
-                        <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                        <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                             No personal records logged yet. Add one!
                         </TableCell>
                     </TableRow>
@@ -225,6 +179,91 @@ export default function DashboardPage() {
               </Table>
             </CardContent>
         </Card>
+
+        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>{editingRecord ? 'Edit Personal Record' : 'Add New Personal Record'}</DialogTitle>
+                    <DialogDescription>
+                        {editingRecord ? 'Update the details of your personal best.' : 'Log a new PR. If the exercise exists, it will be updated.'}
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+                        <FormField
+                            control={form.control}
+                            name="exercise"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Exercise</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., Bench Press" {...field} disabled={!!editingRecord} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="weight"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Weight</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., 105 kg" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="date"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Date</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <FormControl>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full pl-3 text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    {field.value ? (
+                                                        format(field.value, "PPP")
+                                                    ) : (
+                                                        <span>Pick a date</span>
+                                                    )}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                </Button>
+                                            </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={field.value}
+                                                onSelect={field.onChange}
+                                                disabled={(date) =>
+                                                    date > new Date() || date < new Date("1900-01-01")
+                                                }
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <DialogFooter>
+                            <Button type="submit">Save Record</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
 
         <Card>
             <CardHeader>

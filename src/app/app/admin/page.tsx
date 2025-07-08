@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -11,6 +10,7 @@ import { locations } from "@/lib/class-schedule";
 import { AdminDashboardOverview } from "@/components/admin-dashboard-overview";
 import { usePendingBookings } from "@/hooks/use-pending-bookings";
 import { cn } from "@/lib/utils";
+import { ManageGymsForm } from "@/components/manage-gyms-form";
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ShieldCheck, CalendarCheck, UserCheck, MessageSquare, Loader2, BarChart2, Trash2, Megaphone, Send } from "lucide-react";
+import { ShieldCheck, CalendarCheck, UserCheck, MessageSquare, Loader2, BarChart2, Trash2, Megaphone, Send, Building2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -559,7 +559,7 @@ export default function AdminPage() {
             </div>
             
             <Tabs defaultValue="analytics" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
                 <TabsTrigger value="analytics">
                     <BarChart2 className="mr-2 size-4"/>
                     Analytics
@@ -576,6 +576,10 @@ export default function AdminPage() {
                     <MessageSquare className="mr-2 size-4"/>
                     Chat Moderation
                 </TabsTrigger>
+                <TabsTrigger value="manage-gyms">
+                    <Building2 className="mr-2 size-4"/>
+                    Manage Gyms
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="analytics" className="mt-4">
                  <AdminDashboardOverview />
@@ -588,6 +592,9 @@ export default function AdminPage() {
               </TabsContent>
               <TabsContent value="chat-moderation" className="mt-4">
                  <ChatModerationManager />
+              </TabsContent>
+              <TabsContent value="manage-gyms" className="mt-4">
+                 <ManageGymsForm />
               </TabsContent>
             </Tabs>
         </div>

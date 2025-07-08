@@ -90,7 +90,7 @@ export function SidebarNav() {
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.label}>
               <SidebarMenuButton
-                isActive={!item.disabled && pathname.startsWith(item.href)}
+                isActive={!item.disabled && (item.href === '/app' ? pathname === item.href : pathname.startsWith(item.href))}
                 onClick={() => !item.disabled && router.push(item.href)}
                 tooltip={item.tooltip || item.label}
                 disabled={item.disabled}
@@ -107,10 +107,12 @@ export function SidebarNav() {
       <SidebarSeparator />
       <SidebarFooter>
         <div className="flex flex-col gap-2 p-2">
-            <div className="flex flex-col items-start p-2 group-data-[collapsible=icon]:hidden">
-                <p className="font-semibold text-sm">{user?.displayName}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
-            </div>
+            {user?.role !== 'admin' && (
+                <div className="flex flex-col items-start p-2 group-data-[collapsible=icon]:hidden">
+                    <p className="font-semibold text-sm">{user?.displayName}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                </div>
+            )}
             <Button variant="outline" className="w-full justify-start gap-2" onClick={handleSignOut}>
                 <LogOut className="size-4" />
                 <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>

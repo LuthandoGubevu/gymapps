@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, CalendarCheck, UserCheck, MessageSquare, Loader2 } from "lucide-react";
+import { ShieldCheck, CalendarCheck, UserCheck, MessageSquare, Loader2, BarChart2 } from "lucide-react";
 
 type BookingStatus = 'pending' | 'accepted' | 'declined';
 
@@ -350,12 +350,15 @@ export default function AdminPage() {
                     <ShieldCheck className="text-primary size-8" />
                     Admin Panel
                 </h1>
-                <p className="text-muted-foreground">Welcome, Administrator. Manage all gym operations from here.</p>
+                <p className="text-muted-foreground">Shared dashboard for managing all gym operations.</p>
             </div>
             
-            <Tabs defaultValue="dashboard" className="w-full">
+            <Tabs defaultValue="analytics" className="w-full">
               <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                <TabsTrigger value="analytics">
+                    <BarChart2 className="mr-2 size-4"/>
+                    Analytics
+                </TabsTrigger>
                 <TabsTrigger value="class-bookings" className="relative">
                     Class Bookings
                     {pendingClassBookings > 0 && <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">{pendingClassBookings}</Badge>}
@@ -366,7 +369,7 @@ export default function AdminPage() {
                 </TabsTrigger>
                 <TabsTrigger value="chat-moderation">Chat Moderation</TabsTrigger>
               </TabsList>
-              <TabsContent value="dashboard" className="mt-4">
+              <TabsContent value="analytics" className="mt-4">
                  <AdminDashboardOverview />
               </TabsContent>
               <TabsContent value="class-bookings" className="mt-4">
@@ -377,8 +380,19 @@ export default function AdminPage() {
               </TabsContent>
               <TabsContent value="chat-moderation" className="mt-4">
                  <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2"><MessageSquare/>Group Chat Moderation</CardTitle></CardHeader>
-                    <CardContent><p>Chat moderation tools are coming soon.</p></CardContent>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><MessageSquare/>Group Chat Moderation</CardTitle>
+                        <CardDescription>Tools to manage community interactions and communications.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-muted-foreground">The full chat moderation toolkit is under development. Upcoming features will include:</p>
+                        <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+                            <li>Viewing live chat feeds for each gym location.</li>
+                            <li>Deleting inappropriate messages with a single click.</li>
+                            <li>Posting announcements that appear highlighted in the chat.</li>
+                            <li>Temporarily muting or banning users from the chat.</li>
+                        </ul>
+                    </CardContent>
                  </Card>
               </TabsContent>
             </Tabs>

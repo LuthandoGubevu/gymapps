@@ -11,7 +11,11 @@ export default function HomePage() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.push('/app');
+        if (user.role === 'admin') {
+          router.push('/app/admin');
+        } else {
+          router.push('/app');
+        }
       } else {
         router.push('/login');
       }

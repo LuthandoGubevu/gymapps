@@ -57,7 +57,7 @@ export function GymCapacityCard() {
                 </ChartContainer>
             </div>
              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <div className="flex items-baseline gap-1">
+                <div className="flex items-baseline justify-center whitespace-nowrap gap-1">
                     <p className="text-4xl font-bold">{currentVisitors}</p>
                     <p className="text-base text-muted-foreground">/ {MAX_CAPACITY}</p>
                 </div>

@@ -1,68 +1,56 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper Functions
-    function isAuthenticated() {
+    function isUserAuthenticated() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return request.auth.uid == userId;
+    function isUser(uid) {
+      return isUserAuthenticated() && request.auth.uid == uid;
+    }
+
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
 
     function isAdmin() {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isUserAuthenticated() && userRole() == 'admin';
     }
 
-    // User Profiles
     match /users/{userId} {
-      // Admins can read/write any user profile.
-      // Users can read/update their own profile.
-      // Authenticated users can create their own profile on signup.
-      allow get, update: if isOwner(userId) || isAdmin();
-      allow list, delete: if isAdmin();
-      allow create: if isOwner(userId);
-    }
-
-    // Gym Information
-    match /gyms/{gymId} {
-      // Admins can manage gyms. Any authenticated user can read gym data.
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-
-    // Class Booking Requests
-    match /classBookings/{bookingId} {
-      // Admins can read and manage all bookings.
-      allow get, list, update, delete: if isAdmin();
-      // Users can create their own bookings.
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      // Users should be able to read their own bookings in the future.
-      allow get: if isAuthenticated() && get(/databases/$(database)/documents/classBookings/$(bookingId)).data.userId == request.auth.uid;
-    }
-
-    // Trainer Booking Requests
-    match /trainerBookings/{bookingId} {
-      // Admins can read and manage all bookings.
-      allow get, list, update, delete: if isAdmin();
-      // Users can create their own bookings.
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      // Users should be able to read their own bookings in the future.
-      allow get: if isAuthenticated() && get(/databases/$(database)/documents/trainerBookings/$(bookingId)).data.userId == request.auth.uid;
-    }
-
-    // Group Chats
-    match /chats/{gymId}/messages/{messageId} {
-      function isMemberOfGym() {
-        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == gymId;
-      }
-      
-      // Admins can moderate any chat.
-      // Users can read/write messages in their own primary gym's chat.
-      allow read, create: if isAdmin() || (isAuthenticated() && isMemberOfGym());
+      allow read: if isUser(userId) || isAdmin();
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
       allow delete: if isAdmin();
+      allow list: if isAdmin();
+    }
+
+    match /gyms/{gymId} {
+      // Gym list must be public for the sign-up form and general app info.
+      allow read: if true; 
+      // Only admins can create, update, or delete gym locations.
+      allow create, update, delete: if isAdmin();
+    }
+    
+    match /chats/{gymId}/messages/{messageId} {
+      allow read: if isUserAuthenticated() && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == gymId || isAdmin());
+      allow create: if isUserAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.primaryGym == gymId;
+      allow delete: if isAdmin();
+    }
+    
+    match /classBookings/{bookingId} {
+      allow read, list: if isAdmin();
+      allow create: if isUserAuthenticated();
+      allow update: if isAdmin();
+    }
+    
+    match /trainerBookings/{bookingId} {
+      allow read, list: if isAdmin();
+      allow create: if isUserAuthenticated();
+      allow update: if isAdmin();
     }
   }
 }

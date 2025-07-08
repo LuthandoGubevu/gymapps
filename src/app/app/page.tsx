@@ -129,145 +129,10 @@ export default function DashboardPage() {
         </CardHeader>
       </Card>
       
+      <GymCapacityCard />
+
       <div className="grid gap-6 lg:grid-cols-3">
         <RankProgressCard />
-        <GymCapacityCard />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div className="space-y-1.5">
-                        <CardTitle className="flex items-center gap-2"><Trophy className="text-primary"/>Personal Records</CardTitle>
-                        <CardDescription>Your all-time best lifts. Keep pushing!</CardDescription>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={handleAddClick}>
-                        <PlusCircle className="mr-2 h-4 w-4"/>
-                        Add PR
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Exercise</TableHead>
-                    <TableHead>Weight</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {personalRecords.length > 0 ? personalRecords.map(pr => (
-                    <TableRow key={pr.id}>
-                      <TableCell className="font-medium">{pr.exercise}</TableCell>
-                      <TableCell>{pr.weight}</TableCell>
-                      <TableCell>{pr.date}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(pr)}>
-                           <Pencil className="h-4 w-4" />
-                           <span className="sr-only">Edit PR</span>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )) : (
-                    <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                            No personal records logged yet. Add one!
-                        </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-        </Card>
-
-        <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>{editingRecord ? 'Edit Personal Record' : 'Add New Personal Record'}</DialogTitle>
-                    <DialogDescription>
-                        {editingRecord ? 'Update the details of your personal best.' : 'Log a new PR. If the exercise exists, it will be updated.'}
-                    </DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-                        <FormField
-                            control={form.control}
-                            name="exercise"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Exercise</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., Bench Press" {...field} disabled={!!editingRecord} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="weight"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Weight</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., 105 kg" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="date"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Date</FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant={"outline"}
-                                                    className={cn(
-                                                        "w-full pl-3 text-left font-normal",
-                                                        !field.value && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {field.value ? (
-                                                        format(field.value, "PPP")
-                                                    ) : (
-                                                        <span>Pick a date</span>
-                                                    )}
-                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={field.value}
-                                                onSelect={field.onChange}
-                                                disabled={(date) =>
-                                                    date > new Date() || date < new Date("1900-01-01")
-                                                }
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <DialogFooter>
-                            <Button type="submit">Save Record</Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
-
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Award className="text-primary"/>Achievements</CardTitle>
@@ -286,6 +151,139 @@ export default function DashboardPage() {
             </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+            <div className="flex items-center justify-between">
+                <div className="space-y-1.5">
+                    <CardTitle className="flex items-center gap-2"><Trophy className="text-primary"/>Personal Records</CardTitle>
+                    <CardDescription>Your all-time best lifts. Keep pushing!</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleAddClick}>
+                    <PlusCircle className="mr-2 h-4 w-4"/>
+                    Add PR
+                </Button>
+            </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Exercise</TableHead>
+                <TableHead>Weight</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {personalRecords.length > 0 ? personalRecords.map(pr => (
+                <TableRow key={pr.id}>
+                  <TableCell className="font-medium">{pr.exercise}</TableCell>
+                  <TableCell>{pr.weight}</TableCell>
+                  <TableCell>{pr.date}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(pr)}>
+                       <Pencil className="h-4 w-4" />
+                       <span className="sr-only">Edit PR</span>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )) : (
+                <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                        No personal records logged yet. Add one!
+                    </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
+          <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                  <DialogTitle>{editingRecord ? 'Edit Personal Record' : 'Add New Personal Record'}</DialogTitle>
+                  <DialogDescription>
+                      {editingRecord ? 'Update the details of your personal best.' : 'Log a new PR. If the exercise exists, it will be updated.'}
+                  </DialogDescription>
+              </DialogHeader>
+              <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+                      <FormField
+                          control={form.control}
+                          name="exercise"
+                          render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>Exercise</FormLabel>
+                                  <FormControl>
+                                      <Input placeholder="e.g., Bench Press" {...field} disabled={!!editingRecord} />
+                                  </FormControl>
+                                  <FormMessage />
+                              </FormItem>
+                          )}
+                      />
+                      <FormField
+                          control={form.control}
+                          name="weight"
+                          render={({ field }) => (
+                              <FormItem>
+                                  <FormLabel>Weight</FormLabel>
+                                  <FormControl>
+                                      <Input placeholder="e.g., 105 kg" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                              </FormItem>
+                          )}
+                      />
+                      <FormField
+                          control={form.control}
+                          name="date"
+                          render={({ field }) => (
+                              <FormItem className="flex flex-col">
+                                  <FormLabel>Date</FormLabel>
+                                  <Popover>
+                                      <PopoverTrigger asChild>
+                                          <FormControl>
+                                              <Button
+                                                  variant={"outline"}
+                                                  className={cn(
+                                                      "w-full pl-3 text-left font-normal",
+                                                      !field.value && "text-muted-foreground"
+                                                  )}
+                                              >
+                                                  {field.value ? (
+                                                      format(field.value, "PPP")
+                                                  ) : (
+                                                      <span>Pick a date</span>
+                                                  )}
+                                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                              </Button>
+                                          </FormControl>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-auto p-0" align="start">
+                                          <Calendar
+                                              mode="single"
+                                              selected={field.value}
+                                              onSelect={field.onChange}
+                                              disabled={(date) =>
+                                                  date > new Date() || date < new Date("1900-01-01")
+                                              }
+                                              initialFocus
+                                          />
+                                      </PopoverContent>
+                                  </Popover>
+                                  <FormMessage />
+                              </FormItem>
+                          )}
+                      />
+                      <DialogFooter>
+                          <Button type="submit">Save Record</Button>
+                      </DialogFooter>
+                  </form>
+              </Form>
+          </DialogContent>
+      </Dialog>
     </div>
   );
 }

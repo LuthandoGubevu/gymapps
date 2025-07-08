@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -257,9 +256,11 @@ export function ManageGymsForm() {
                         return (
                             <Card key={gym.id} className="flex flex-col">
                                 <CardHeader>
+                                    {gym.imageUrl && (
                                     <div className="w-full h-32 bg-muted rounded-lg relative overflow-hidden mb-4">
-                                        <Image src={gym.imageUrl || 'https://placehold.co/600x400.png'} alt={gym.gymName} layout="fill" objectFit="cover" data-ai-hint="gym interior" />
+                                        <Image src={gym.imageUrl} alt={gym.gymName} layout="fill" objectFit="cover" data-ai-hint="gym interior" />
                                     </div>
+                                    )}
                                     <CardTitle>{gym.gymName}</CardTitle>
                                     <CardDescription>{gym.address}</CardDescription>
                                 </CardHeader>

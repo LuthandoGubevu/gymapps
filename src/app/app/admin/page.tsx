@@ -101,8 +101,15 @@ function ClassBookingsManager() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const { toast } = useToast();
   const { gyms } = useGyms();
+  const { user } = useAuth();
 
   useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      setBookings([]);
+      setIsLoading(false);
+      return;
+    }
+
     const q = query(collection(db, "classBookings"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const bookingsData = querySnapshot.docs.map(doc => ({
@@ -118,7 +125,7 @@ function ClassBookingsManager() {
     });
 
     return () => unsubscribe();
-  }, [toast]);
+  }, [toast, user]);
 
   const handleUpdateStatus = async (id: string, status: BookingStatus) => {
     setUpdatingId(id);
@@ -230,8 +237,15 @@ function TrainerBookingsManager() {
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const { toast } = useToast();
     const { gyms } = useGyms();
+    const { user } = useAuth();
 
     useEffect(() => {
+        if (!user || user.role !== 'admin') {
+            setBookings([]);
+            setIsLoading(false);
+            return;
+        }
+
         const q = query(collection(db, "trainerBookings"));
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const bookingsData = querySnapshot.docs.map(doc => ({
@@ -247,7 +261,7 @@ function TrainerBookingsManager() {
         });
 
         return () => unsubscribe();
-    }, [toast]);
+    }, [toast, user]);
 
     const handleUpdateStatus = async (id: string, status: BookingStatus) => {
         setUpdatingId(id);
@@ -353,6 +367,7 @@ function TrainerBookingsManager() {
 // Chat Moderation Manager Component
 function ChatModerationManager() {
     const { gyms, isLoading: gymsLoading } = useGyms();
+    const { user } = useAuth();
     const [selectedLocation, setSelectedLocation] = useState<string>('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -374,7 +389,11 @@ function ChatModerationManager() {
     };
 
     useEffect(() => {
-        if (!selectedLocation) return;
+        if (!selectedLocation || !user || user.role !== 'admin') {
+            setMessages([]);
+            setIsLoading(false);
+            return;
+        }
 
         setIsLoading(true);
         const messagesColRef = collection(db, 'chats', selectedLocation, 'messages');
@@ -394,7 +413,7 @@ function ChatModerationManager() {
         });
 
         return () => unsubscribe();
-    }, [selectedLocation, toast]);
+    }, [selectedLocation, toast, user]);
     
     const handlePostAnnouncement = async (e: FormEvent) => {
         e.preventDefault();

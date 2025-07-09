@@ -1,10 +1,8 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Flame, ShieldCheck, Gem, Rocket, Crown, Calendar, Clock, Repeat } from "lucide-react";
+import { Flame, ShieldCheck, Gem, Rocket, Crown, Calendar, Clock } from "lucide-react";
 import React from "react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -35,8 +33,6 @@ export function RankProgressCard() {
 
   const visitsNeeded = nextRank ? nextRank.minVisits - userStats.visitsThisMonth : 0;
   
-  const RankIcon = currentRank.icon;
-
   return (
     <Card className="shadow-lg lg:col-span-2">
       <CardHeader>
@@ -57,17 +53,17 @@ export function RankProgressCard() {
         </div>
 
         <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="flex flex-col items-center justify-center rounded-lg bg-muted/50 p-4">
+          <div className="flex flex-col items-center justify-center rounded-lg border p-4">
             <Calendar className="mb-2 size-6 text-primary" />
             <p className="text-2xl font-bold">{userStats.visitsThisMonth}</p>
             <p className="text-xs text-muted-foreground">Visits this month</p>
           </div>
-           <div className="flex flex-col items-center justify-center rounded-lg bg-muted/50 p-4">
+           <div className="flex flex-col items-center justify-center rounded-lg border p-4">
             <Clock className="mb-2 size-6 text-primary" />
             <p className="text-2xl font-bold">{userStats.avgDurationMinutes}<span className="text-base text-muted-foreground">m</span></p>
             <p className="text-xs text-muted-foreground">Avg. Duration</p>
           </div>
-           <div className="flex flex-col items-center justify-center rounded-lg bg-muted/50 p-4">
+           <div className="flex flex-col items-center justify-center rounded-lg border p-4">
             <Flame className="mb-2 size-6 text-primary" />
             <p className="text-2xl font-bold">{userStats.currentStreak}</p>
             <p className="text-xs text-muted-foreground">Current Streak</p>
@@ -84,7 +80,7 @@ export function RankProgressCard() {
                         return (
                             <Tooltip key={rank.name}>
                                 <TooltipTrigger asChild>
-                                    <div className="z-0 flex flex-col items-center gap-1 cursor-default bg-background px-2">
+                                    <div className="z-0 flex flex-col items-center gap-1 cursor-default bg-transparent px-2">
                                         <div
                                             className={cn(
                                                 "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all",

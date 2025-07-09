@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Flame, ShieldCheck, Gem, Rocket, Crown, Calendar, Clock, Repeat } from "lucide-react";
 import React from "react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const ranks = [
@@ -39,12 +40,8 @@ export function RankProgressCard() {
   return (
     <Card className="shadow-lg lg:col-span-2">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>My Rank</span>
-          <Badge variant="outline" className={`border-0 ${currentRank.color} bg-opacity-20 bg-current`}>
-            <RankIcon className={`mr-2 size-4 ${currentRank.color}`} />
-            {currentRank.name}
-          </Badge>
+        <CardTitle>
+          My Rank
         </CardTitle>
         <CardDescription>Your monthly progress and stats.</CardDescription>
       </CardHeader>
@@ -59,7 +56,7 @@ export function RankProgressCard() {
           <Progress value={progressToNextRank} indicatorClassName="bg-primary" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-3">
+        <div className="grid grid-cols-3 gap-4 text-center">
           <div className="flex flex-col items-center justify-center rounded-lg bg-muted/50 p-4">
             <Calendar className="mb-2 size-6 text-primary" />
             <p className="text-2xl font-bold">{userStats.visitsThisMonth}</p>
@@ -71,48 +68,48 @@ export function RankProgressCard() {
             <p className="text-xs text-muted-foreground">Avg. Duration</p>
           </div>
            <div className="flex flex-col items-center justify-center rounded-lg bg-muted/50 p-4">
-            <Repeat className="mb-2 size-6 text-primary" />
+            <Flame className="mb-2 size-6 text-primary" />
             <p className="text-2xl font-bold">{userStats.currentStreak}</p>
             <p className="text-xs text-muted-foreground">Current Streak</p>
           </div>
         </div>
         
         <div className="pt-4">
-            <div className="relative flex justify-between items-center">
-                <div className="absolute left-0 top-4 w-full h-0.5 bg-border -z-10" />
+            <TooltipProvider>
+                <div className="relative flex justify-between items-center">
+                    {ranks.map((rank) => {
+                        const isAchieved = userStats.visitsThisMonth >= rank.minVisits;
+                        const isCurrent = currentRank.name === rank.name;
 
-                {ranks.map((rank) => {
-                    const isAchieved = userStats.visitsThisMonth >= rank.minVisits;
-                    const isCurrent = currentRank.name === rank.name;
-
-                    return (
-                        <Tooltip key={rank.name}>
-                            <TooltipTrigger asChild>
-                                <div className="z-0 flex flex-col items-center gap-1 cursor-default bg-background px-2">
-                                    <div
-                                        className={cn(
-                                            "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all",
-                                            isCurrent
-                                                ? "border-primary scale-110"
-                                                : isAchieved
-                                                ? "border-primary/50"
-                                                : "border-border",
-                                        )}
-                                    >
-                                        <rank.icon className={cn("size-5", isAchieved ? rank.color : "text-muted-foreground/60")} />
+                        return (
+                            <Tooltip key={rank.name}>
+                                <TooltipTrigger asChild>
+                                    <div className="z-0 flex flex-col items-center gap-1 cursor-default bg-background px-2">
+                                        <div
+                                            className={cn(
+                                                "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all",
+                                                isCurrent
+                                                    ? "border-primary scale-110"
+                                                    : isAchieved
+                                                    ? "border-primary/50"
+                                                    : "border-border",
+                                            )}
+                                        >
+                                            <rank.icon className={cn("size-5", isAchieved ? rank.color : "text-muted-foreground/60")} />
+                                        </div>
+                                        <p className={cn("text-xs font-medium mt-1", isCurrent ? "text-primary" : "text-muted-foreground")}>
+                                            {rank.name}
+                                        </p>
                                     </div>
-                                    <p className={cn("text-xs font-medium mt-1", isCurrent ? "text-primary" : "text-muted-foreground")}>
-                                        {rank.name}
-                                    </p>
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Requires {rank.minVisits}+ visits</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    );
-                })}
-            </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Requires {rank.minVisits}+ visits</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        );
+                    })}
+                </div>
+            </TooltipProvider>
         </div>
       </CardContent>
     </Card>

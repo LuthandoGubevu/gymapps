@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -94,10 +93,10 @@ export function RankProgressCard() {
                                         className={cn(
                                             "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all",
                                             isCurrent
-                                                ? "border-primary bg-primary/20 scale-110"
+                                                ? "border-primary scale-110"
                                                 : isAchieved
-                                                ? "border-primary/50 bg-primary/10"
-                                                : "border-border bg-background",
+                                                ? "border-primary/50"
+                                                : "border-border",
                                         )}
                                     >
                                         <rank.icon className={cn("size-5", isAchieved ? rank.color : "text-muted-foreground/60")} />

@@ -1,4 +1,5 @@
 import { Logo } from "@/components/logo";
+import { InstallPrompt } from "@/components/install-prompt";
 
 export default function AuthLayout({
     children,
@@ -13,6 +14,7 @@ export default function AuthLayout({
                 </div>
                 {children}
             </div>
+            <InstallPrompt />
         </main>
     );
 }

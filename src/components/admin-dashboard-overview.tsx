@@ -31,8 +31,14 @@ export function AdminDashboardOverview() {
 
   const chartData = useMemo(() => {
     if (gymsLoading || !gyms) return [];
-    return gyms.map(gym => ({
-      name: gym.gymName,
+    // Shorten long gym names for mobile view
+    const formattedGyms = gyms.map(gym => ({
+      ...gym,
+      displayName: gym.gymName.replace('MetroGym', '').trim(),
+    }));
+
+    return formattedGyms.map(gym => ({
+      name: gym.displayName,
       current: occupancyData[gym.id] || 0,
     })).sort((a,b) => b.current - a.current);
   }, [gyms, occupancyData, gymsLoading]);
@@ -40,8 +46,9 @@ export function AdminDashboardOverview() {
   const busiestLocation = useMemo(() => {
     if (!chartData || chartData.length === 0) return { name: 'N/A', active: 0 };
     // The chart data is already sorted, so the first item is the busiest
-    return { name: chartData[0].name, active: chartData[0].current };
-  }, [chartData]);
+    const busiestGym = gyms.find(g => g.gymName.includes(chartData[0].name))
+    return { name: busiestGym?.gymName || chartData[0].name, active: chartData[0].current };
+  }, [chartData, gyms]);
   
   const totalVisitorsToday = useMemo(() => {
     if(!chartData) return 0;
@@ -89,7 +96,7 @@ export function AdminDashboardOverview() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Live Visitors</CardTitle>
@@ -106,7 +113,7 @@ export function AdminDashboardOverview() {
             <MapPin className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             {isLoading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold">{busiestLocation.name}</div>}
+             {isLoading ? <Skeleton className="h-8 w-3/4" /> : <div className="text-2xl font-bold truncate">{busiestLocation.name}</div>}
              {isLoading ? <Skeleton className="h-4 w-full mt-1" /> : <p className="text-xs text-muted-foreground">{busiestLocation.active} members currently active</p>}
           </CardContent>
         </Card>
@@ -136,7 +143,7 @@ export function AdminDashboardOverview() {
           <CardTitle>Live Capacity by Gym</CardTitle>
           <CardDescription>A real-time overview of member presence at each location.</CardDescription>
         </CardHeader>
-        <CardContent className="pl-2">
+        <CardContent className="pl-0 pr-2 sm:pl-2">
           {isLoading ? <Skeleton className="h-[300px] w-full" /> : 
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer>
@@ -147,7 +154,7 @@ export function AdminDashboardOverview() {
                       margin={{
                           top: 5,
                           right: 10,
-                          left: -10,
+                          left: 0,
                           bottom: 0,
                       }}
                   >
@@ -158,7 +165,8 @@ export function AdminDashboardOverview() {
                           fontSize={12} 
                           tickLine={false} 
                           axisLine={false} 
-                          width={80}
+                          width={70}
+                          tick={{ fill: 'hsl(var(--muted-foreground))' }}
                       />
                       <XAxis 
                           dataKey="current"

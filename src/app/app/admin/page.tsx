@@ -563,10 +563,10 @@ export default function AdminPage() {
 
     const adminNavItems = [
       { id: 'analytics', label: 'Analytics', icon: BarChart2, badge: 0 },
-      { id: 'class-bookings', label: 'Class Bookings', icon: CalendarCheck, badge: pendingClassBookings },
-      { id: 'trainer-bookings', label: 'Trainer Bookings', icon: UserCheck, badge: pendingTrainerBookings },
-      { id: 'chat-moderation', label: 'Chat Moderation', icon: MessageSquare, badge: 0 },
-      { id: 'manage-gyms', label: 'Manage Gyms', icon: Building2, badge: 0 },
+      { id: 'class-bookings', label: 'Classes', icon: CalendarCheck, badge: pendingClassBookings },
+      { id: 'trainer-bookings', label: 'Trainers', icon: UserCheck, badge: pendingTrainerBookings },
+      { id: 'chat-moderation', label: 'Chat', icon: MessageSquare, badge: 0 },
+      { id: 'manage-gyms', label: 'Gyms', icon: Building2, badge: 0 },
     ];
 
     useEffect(() => {
@@ -587,7 +587,7 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="space-y-8 pb-20 md:pb-0">
+        <div className="space-y-8 pb-20 md:pb-8">
             <div>
                 <h1 className="text-2xl font-bold md:text-3xl flex items-center gap-2">
                     <ShieldCheck className="text-primary size-8" />

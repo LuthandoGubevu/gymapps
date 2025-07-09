@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { BottomNav } from "@/components/bottom-nav";
+import { InstallPrompt } from "@/components/install-prompt";
 
 export default function AppLayout({
     children,
@@ -35,9 +36,12 @@ export default function AppLayout({
                 <SidebarNav />
             </Sidebar>
             <SidebarInset>
-                <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-white/20 bg-sidebar/80 px-4 backdrop-blur-sm md:justify-end">
-                    <SidebarTrigger className="md:hidden" />
-                    <h1 className="text-xl font-semibold md:hidden">MetroGym</h1>
+                <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-white/20 bg-sidebar/80 px-4 backdrop-blur-sm">
+                    <div className="flex items-center gap-2">
+                        <SidebarTrigger className="md:hidden" />
+                        <h1 className="text-xl font-semibold md:hidden">MetroGym</h1>
+                    </div>
+                    <InstallPrompt />
                 </header>
                 <main className="flex-1 p-4 pb-20 md:p-6 md:pb-6 lg:p-8 lg:pb-8">
                     {children}

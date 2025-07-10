@@ -31,7 +31,8 @@ export function AdminDashboardOverview() {
 
   const chartData = useMemo(() => {
     if (gymsLoading || !gyms) return [];
-    // Shorten long gym names for mobile view
+    
+    // Shorten long gym names for chart display
     const formattedGyms = gyms.map(gym => ({
       ...gym,
       displayName: gym.gymName.replace('MetroGym', '').trim(),
@@ -154,7 +155,7 @@ export function AdminDashboardOverview() {
                       margin={{
                           top: 5,
                           right: 10,
-                          left: 0,
+                          left: -10, // Adjust left margin for mobile
                           bottom: 0,
                       }}
                   >
@@ -162,11 +163,11 @@ export function AdminDashboardOverview() {
                           dataKey="name" 
                           type="category"
                           stroke="hsl(var(--muted-foreground))" 
-                          fontSize={12} 
                           tickLine={false} 
                           axisLine={false} 
-                          width={70}
-                          tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          width={80} // Give a bit more space
+                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} // Smaller font size for mobile
+                          interval={0} // Ensure all labels are shown
                       />
                       <XAxis 
                           dataKey="current"

@@ -593,7 +593,7 @@ export default function AdminPage() {
                     <ShieldCheck className="text-primary size-8" />
                     Admin Panel
                 </h1>
-                <p className="text-muted-foreground">Shared dashboard for managing all gym operations.</p>
+                <p className="text-muted-foreground break-words">Shared dashboard for managing all gym operations.</p>
             </div>
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

@@ -142,7 +142,7 @@ export function AdminDashboardOverview() {
       <Card>
         <CardHeader>
           <CardTitle>Live Capacity by Gym</CardTitle>
-          <CardDescription>A real-time overview of member presence at each location.</CardDescription>
+          <CardDescription className="break-words">A real-time overview of member presence at each location.</CardDescription>
         </CardHeader>
         <CardContent className="pl-0 pr-2 sm:pl-2">
           {isLoading ? <Skeleton className="h-[300px] w-full" /> : 

@@ -19,6 +19,14 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+const mockChartData = [
+    { name: 'Sandton', current: 78 },
+    { name: 'Midrand', current: 55 },
+    { name: 'Rosebank', current: 42 },
+    { name: 'Fourways', current: 30 },
+    { name: 'Soweto', current: 15 },
+]
+
 
 export function AdminDashboardOverview() {
   const [totalUsers, setTotalUsers] = useState(0);
@@ -30,7 +38,7 @@ export function AdminDashboardOverview() {
   const { occupancyData, isLoading: occupancyLoading } = useAllGymsOccupancy();
 
   const chartData = useMemo(() => {
-    if (gymsLoading || !gyms) return [];
+    if (gymsLoading || gyms.length === 0 || occupancyLoading) return mockChartData;
     
     // Shorten long gym names for chart display
     const formattedGyms = gyms.map(gym => ({
@@ -38,11 +46,13 @@ export function AdminDashboardOverview() {
       displayName: gym.gymName.replace('MetroGym', '').trim(),
     }));
 
-    return formattedGyms.map(gym => ({
+    const liveData = formattedGyms.map(gym => ({
       name: gym.displayName,
       current: occupancyData[gym.id] || 0,
     })).sort((a,b) => b.current - a.current);
-  }, [gyms, occupancyData, gymsLoading]);
+
+    return liveData.length > 0 ? liveData : mockChartData;
+  }, [gyms, occupancyData, gymsLoading, occupancyLoading]);
 
   const busiestLocation = useMemo(() => {
     if (!chartData || chartData.length === 0) return { name: 'N/A', active: 0 };
@@ -145,7 +155,7 @@ export function AdminDashboardOverview() {
           <CardDescription className="break-words">A real-time overview of member presence at each location.</CardDescription>
         </CardHeader>
         <CardContent className="pl-0 pr-2 sm:pl-2">
-          {isLoading ? <Skeleton className="h-[300px] w-full" /> : 
+          {isLoading && chartData === mockChartData ? <Skeleton className="h-[300px] w-full" /> : 
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <ResponsiveContainer>
                   <BarChart 

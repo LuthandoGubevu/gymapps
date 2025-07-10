@@ -134,11 +134,13 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-8">
-        <div>
-            <h1 className="text-2xl font-bold md:text-3xl">Your Profile</h1>
-            <p className="text-muted-foreground">Manage your personal information and goals.</p>
-        </div>
-        <Card className="shadow-lg max-w-2xl">
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Profile</CardTitle>
+          <CardDescription>Manage your personal information and goals.</CardDescription>
+        </CardHeader>
+      </Card>
+      <Card className="shadow-lg max-w-2xl">
         <CardHeader>
             <CardTitle>Personal Information</CardTitle>
             <CardDescription>Keep your profile up to date.</CardDescription>
@@ -237,10 +239,12 @@ export default function ProfilePage() {
 function ProfileSkeleton() {
     return (
         <div className="space-y-8">
-            <div>
-                <Skeleton className="h-9 w-64" />
-                <Skeleton className="h-5 w-96 mt-2" />
-            </div>
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-5 w-80 mt-2" />
+                </CardHeader>
+            </Card>
             <Card className="shadow-lg max-w-2xl">
                 <CardHeader>
                     <Skeleton className="h-7 w-48" />

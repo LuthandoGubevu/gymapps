@@ -209,7 +209,7 @@ export default function LocationTrainersPage() {
                    disabled={selectedDay === 'all' || selectedTime === 'all' || isBooking === trainer.id}
                   >
                     <UserCheck className="mr-2 size-4"/>
-                    {isBooking === trainer.id ? 'Requesting...' : 'Requesting Booking'}
+                    {isBooking === trainer.id ? 'Requesting...' : 'Request Booking'}
                  </Button>
               </CardFooter>
             </Card>

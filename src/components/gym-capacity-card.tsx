@@ -32,6 +32,9 @@ export function GymCapacityCard() {
         title: "Preference Updated",
         description: `Automatic check-in has been ${checked ? 'enabled' : 'disabled'}.`
       });
+      // Manually update user context without re-fetching everything
+      // This is a temporary solution for better UX. A full state management library would be better.
+      user.autoPresenceEnabled = checked; 
     } catch (error) {
       toast({
         variant: "destructive",
@@ -43,6 +46,8 @@ export function GymCapacityCard() {
     }
   };
   
+  const isAutoPresenceEnabled = user?.autoPresenceEnabled ?? false;
+
   return (
     <Card className="col-span-1 lg:col-span-1 flex flex-col justify-between">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -61,8 +66,8 @@ export function GymCapacityCard() {
             </p>
         </CardContent>
         {user && user.primaryGym && (
-            <CardFooter className="flex flex-col gap-4">
-              {!user.autoPresenceEnabled && (
+            <CardFooter className="flex flex-col items-center gap-4">
+              {!isAutoPresenceEnabled && (
                 <Button className="w-full" onClick={manualCheckIn} disabled={isCheckingIn}>
                   {isCheckingIn ? "Checking In..." : "Manual Check-in"}
                 </Button>
@@ -70,7 +75,7 @@ export function GymCapacityCard() {
               <div className="flex items-center space-x-2 text-center text-sm">
                 <Switch 
                   id="auto-presence" 
-                  checked={user.autoPresenceEnabled}
+                  checked={isAutoPresenceEnabled}
                   onCheckedChange={handleAutoPresenceChange}
                   disabled={isUpdating}
                 />

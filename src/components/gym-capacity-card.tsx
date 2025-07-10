@@ -74,7 +74,7 @@ export function GymCapacityCard() {
                   onCheckedChange={handleAutoPresenceChange}
                   disabled={isUpdating}
                 />
-                <Label htmlFor="auto-presence" className="text-muted-foreground">
+                <Label htmlFor="auto-presence" className="text-foreground">
                   {isUpdating ? <Loader2 className="animate-spin" /> : 'Auto Check-in'}
                 </Label>
               </div>
